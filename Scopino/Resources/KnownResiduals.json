@@ -1,0 +1,143 @@
+{
+  "entries": [
+    {
+      "bundleID": "com.spotify.client",
+      "extraPaths": [
+        "~/Library/Application Support/Spotify",
+        "~/Library/Caches/com.spotify.client",
+        "~/Library/Preferences/com.spotify.client.plist",
+        "~/Library/Saved Application State/com.spotify.client.savedState"
+      ]
+    },
+    {
+      "bundleID": "com.google.Chrome",
+      "extraPaths": [
+        "~/Library/Application Support/Google/Chrome",
+        "~/Library/Caches/Google/Chrome",
+        "~/Library/Preferences/com.google.Chrome.plist",
+        "~/Library/Saved Application State/com.google.Chrome.savedState"
+      ]
+    },
+    {
+      "bundleID": "org.mozilla.firefox",
+      "extraPaths": [
+        "~/Library/Application Support/Firefox",
+        "~/Library/Caches/Firefox",
+        "~/Library/Preferences/org.mozilla.firefox.plist",
+        "~/Library/Saved Application State/org.mozilla.firefox.savedState"
+      ]
+    },
+    {
+      "bundleID": "com.microsoft.VSCode",
+      "extraPaths": [
+        "~/Library/Application Support/Code",
+        "~/Library/Caches/com.microsoft.VSCode",
+        "~/Library/Preferences/com.microsoft.VSCode.plist",
+        "~/.vscode"
+      ]
+    },
+    {
+      "bundleID": "com.figma.Desktop",
+      "extraPaths": [
+        "~/Library/Application Support/Figma",
+        "~/Library/Caches/com.figma.Desktop",
+        "~/Library/Preferences/com.figma.Desktop.plist"
+      ]
+    },
+    {
+      "bundleID": "com.slack.Slack",
+      "extraPaths": [
+        "~/Library/Application Support/Slack",
+        "~/Library/Caches/com.tinyspeck.slackmacgap",
+        "~/Library/Preferences/com.tinyspeck.slackmacgap.plist",
+        "~/Library/Cookies/com.tinyspeck.slackmacgap.binarycookies"
+      ]
+    },
+    {
+      "bundleID": "com.dropbox.client2",
+      "extraPaths": [
+        "~/Library/Application Support/Dropbox",
+        "~/Library/Caches/com.dropbox.client2",
+        "~/Library/Preferences/com.dropbox.client2.plist",
+        "/Library/LaunchAgents/com.dropbox.DropboxMacUpdate.agent.plist",
+        "~/.dropbox"
+      ]
+    },
+    {
+      "bundleID": "com.apple.dt.Xcode",
+      "extraPaths": [
+        "~/Library/Developer/Xcode",
+        "~/Library/Caches/com.apple.dt.Xcode",
+        "~/Library/Preferences/com.apple.dt.Xcode.plist",
+        "~/Library/Application Support/Xcode",
+        "~/Library/Logs/CoreSimulator"
+      ]
+    },
+    {
+      "bundleID": "com.docker.docker",
+      "extraPaths": [
+        "~/Library/Application Support/Docker Desktop",
+        "~/Library/Caches/com.docker.docker",
+        "~/Library/Preferences/com.docker.docker.plist",
+        "~/.docker",
+        "/Library/LaunchDaemons/com.docker.vmnetd.plist",
+        "/Library/PrivilegedHelperTools/com.docker.vmnetd"
+      ]
+    },
+    {
+      "bundleID": "com.microsoft.teams",
+      "extraPaths": [
+        "~/Library/Application Support/Microsoft/Teams",
+        "~/Library/Caches/com.microsoft.teams",
+        "~/Library/Preferences/com.microsoft.teams.plist",
+        "~/Library/Cookies/com.microsoft.teams.binarycookies"
+      ]
+    },
+    {
+      "bundleID": "com.zoom.xos",
+      "extraPaths": [
+        "~/Library/Application Support/zoom.us",
+        "~/Library/Caches/us.zoom.xos",
+        "~/Library/Preferences/us.zoom.xos.plist",
+        "~/Library/Logs/zoom.us",
+        "/Library/LaunchAgents/us.zoom.ZoomDaemon.plist"
+      ]
+    },
+    {
+      "bundleID": "com.jetbrains.intellij",
+      "extraPaths": [
+        "~/Library/Application Support/JetBrains/IntelliJIdea2024.1",
+        "~/Library/Caches/JetBrains/IntelliJIdea2024.1",
+        "~/Library/Logs/JetBrains/IntelliJIdea2024.1",
+        "~/Library/Preferences/com.jetbrains.intellij.plist"
+      ]
+    },
+    {
+      "bundleID": "com.adobe.Photoshop",
+      "extraPaths": [
+        "~/Library/Application Support/Adobe/Adobe Photoshop 2024",
+        "~/Library/Caches/Adobe/Photoshop",
+        "~/Library/Preferences/com.adobe.Photoshop.plist",
+        "~/Library/Logs/Adobe/Photoshop"
+      ]
+    },
+    {
+      "bundleID": "com.tunnelblick.tunnelblick",
+      "extraPaths": [
+        "~/Library/Application Support/Tunnelblick",
+        "~/Library/Preferences/com.tunnelblick.tunnelblick.plist",
+        "/Library/Application Support/Tunnelblick",
+        "/Library/LaunchDaemons/net.tunnelblick.tunnelblick.tunnelblickd.plist"
+      ]
+    },
+    {
+      "bundleID": "com.skype.skype",
+      "extraPaths": [
+        "~/Library/Application Support/Skype",
+        "~/Library/Caches/com.skype.skype",
+        "~/Library/Preferences/com.skype.skype.plist",
+        "~/Library/Cookies/com.skype.skype.binarycookies"
+      ]
+    }
+  ]
+}
