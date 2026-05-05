@@ -15,9 +15,9 @@
             <sparkle:releaseNotesLink>https://alemicieli09.github.io/Scopino/appcast/notes/1.0.html</sparkle:releaseNotesLink>
             <enclosure
                 url="https://github.com/alemicieli09/Scopino/releases/download/v1.0/Scopino.dmg"
-                length="0"
+                length="6058624"
                 type="application/octet-stream"
-                sparkle:edSignature="FIRMA_DA_AGGIUNGERE"
+                sparkle:edSignature="ZF4i8NqXP/PTUK4+YrEoC2eTCh1FJolDQMwp6DNug9OzLb6Sy14gemMCr7kWW7++SvpjTVo5kuXDOT0ujClKAQ=="
             />
         </item>
 
