@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="ScopinoIcon.png" width="128" height="128" alt="Scopino icon">
+</p>
+
 # Scopino
 
 > **Pulizia automatica e intelligente dei residui delle app disinstallate su macOS.**
@@ -51,7 +55,7 @@ Scopino è un'app macOS leggera che vive nella menu bar e monitora in background
 - Selezione granulare: deseleziona singoli file o intere categorie prima di pulire
 
 ### UI
-- **Menu bar only** — nessuna icona nel Dock
+- **Menu bar only** - nessuna icona nel Dock
 - Finestra di proposta con lista residui, dimensioni e checkbox per selezione
 - Progress view animata durante la pulizia
 - Schermata di completamento con riepilogo (rimossi / falliti / ignorati)
@@ -110,31 +114,31 @@ Seleziona il target **Scopino**, scegli il tuo team di sviluppo in Signing & Cap
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    Scopino.app                       │
-│                                                      │
+│                    Scopino.app                      │
+│                                                     │
 │  ┌─────────────┐    ┌──────────────────────────┐    │
 │  │  AppWatcher │    │   AppRemovalDetector     │    │
 │  │  (FSEvents) │───▶│   (filtra, costruisce    │    │
-│  └─────────────┘    │    DetectedApp)           │    │
-│                     └──────────┬─────────────── ┘    │
+│  └─────────────┘    │    DetectedApp)          │    │
+│                     └──────────┬───────────────┘    │
+│                                │                    │
+│                     ┌──────────▼───────────────┐    │
+│                     │    ResidualFinder         │    │
+│                     │  • path standard          │    │
+│                     │  • KnownResidualsDB       │    │
+│                     └──────────┬───────────────┘    │
 │                                │                     │
 │                     ┌──────────▼─────────────── ┐    │
-│                     │    ResidualFinder          │    │
-│                     │  • path standard           │    │
-│                     │  • KnownResidualsDB        │    │
-│                     └──────────┬─────────────── ┘    │
-│                                │                     │
-│                     ┌──────────▼─────────────── ┐    │
-│                     │   CleanupSession           │    │
-│                     │   (ObservableObject)       │    │
+│                     │   CleanupSession          │    │
+│                     │   (ObservableObject)      │    │
 │                     └──────────┬─────────────── ┘    │
 │                                │                     │
 │            ┌───────────────────┼──────────────┐     │
 │            │                   │              │     │
 │   ┌────────▼──────┐  ┌────────▼──────┐  ┌───▼───┐  │
-│   │ResidualCleaner│  │CleanupProposal│  │Session│  │
-│   │  (Trash /     │  │    Window     │  │ Store │  │
-│   │  XPC Helper)  │  │    (SwiftUI)  │  │ (JSON)│  │
+│   │ResidualCleaner│  │CleanupProposal│  │Session│   │
+│   │  (Trash /     │  │    Window     │  │ Store │   │
+│   │  XPC Helper)  │  │    (SwiftUI)  │  │ (JSON)│   │
 │   └───────────────┘  └───────────────┘  └───────┘  │
 └─────────────────────────────────────────────────────┘
          │ XPC
@@ -467,7 +471,7 @@ La chiave pubblica EdDSA è configurata in `Info.plist`:
 <string>KftCQgOvjYgmH0a48hK8AEX0jSLYNxpF08hMwtNHEBM=</string>
 ```
 
-La chiave privata è nel Keychain macOS del developer — **non committare mai la chiave privata**.
+**non committare mai la chiave privata**.
 
 ### Rilascio nuova versione
 
@@ -522,7 +526,7 @@ La chiave privata è nel Keychain macOS del developer — **non committare mai l
 
 ## Licenza
 
-MIT License — vedi [LICENSE](LICENSE) per dettagli.
+MIT License — vedi [LICENSE](https://opensource.org/license/mit) per dettagli.
 
 ---
 
@@ -533,4 +537,4 @@ MIT License — vedi [LICENSE](LICENSE) per dettagli.
 
 ---
 
-*Scopino — perché ogni app che se ne va dovrebbe fare le valigie per bene.* 🧹
+*Scopino - perché ogni app che se ne va dovrebbe essere spazzata via per bene.* 🧹
