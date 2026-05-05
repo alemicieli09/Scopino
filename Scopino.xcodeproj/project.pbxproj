@@ -6,8 +6,25 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F32282292FA9EB3500A0E868 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F32282282FA9EB3500A0E868 /* Sparkle */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F32282122FA9E0E800A0E868 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		F322819E2FA8944800A0E868 /* Scopino.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Scopino.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F32282142FA9E0E800A0E868 /* ScopinoHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ScopinoHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -18,6 +35,14 @@
 			);
 			target = F322819D2FA8944800A0E868 /* Scopino */;
 		};
+		F322821C2FA9E12C00A0E868 /* Exceptions for "Scopino" folder in "ScopinoHelper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/PrivilegedHelper/HelperProtocol.swift,
+				Core/PrivilegedHelper/HelperTool.swift,
+			);
+			target = F32282132FA9E0E800A0E868 /* ScopinoHelper */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -25,14 +50,28 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F32282092FA89AAD00A0E868 /* Exceptions for "Scopino" folder in "Scopino" target */,
+				F322821C2FA9E12C00A0E868 /* Exceptions for "Scopino" folder in "ScopinoHelper" target */,
 			);
 			path = Scopino;
+			sourceTree = "<group>";
+		};
+		F32282152FA9E0E800A0E868 /* ScopinoHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ScopinoHelper;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F322819B2FA8944800A0E868 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F32282292FA9EB3500A0E868 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F32282112FA9E0E800A0E868 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +85,8 @@
 			isa = PBXGroup;
 			children = (
 				F32281A02FA8944800A0E868 /* Scopino */,
+				F32282152FA9E0E800A0E868 /* ScopinoHelper */,
+				F32282242FA9E95000A0E868 /* Frameworks */,
 				F322819F2FA8944800A0E868 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,8 +95,16 @@
 			isa = PBXGroup;
 			children = (
 				F322819E2FA8944800A0E868 /* Scopino.app */,
+				F32282142FA9E0E800A0E868 /* ScopinoHelper */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F32282242FA9E95000A0E868 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -78,10 +127,33 @@
 			);
 			name = Scopino;
 			packageProductDependencies = (
+				F32282282FA9EB3500A0E868 /* Sparkle */,
 			);
 			productName = Scopino;
 			productReference = F322819E2FA8944800A0E868 /* Scopino.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F32282132FA9E0E800A0E868 /* ScopinoHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F32282182FA9E0E800A0E868 /* Build configuration list for PBXNativeTarget "ScopinoHelper" */;
+			buildPhases = (
+				F32282102FA9E0E800A0E868 /* Sources */,
+				F32282112FA9E0E800A0E868 /* Frameworks */,
+				F32282122FA9E0E800A0E868 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F32282152FA9E0E800A0E868 /* ScopinoHelper */,
+			);
+			name = ScopinoHelper;
+			packageProductDependencies = (
+			);
+			productName = ScopinoHelper;
+			productReference = F32282142FA9E0E800A0E868 /* ScopinoHelper */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -96,6 +168,9 @@
 					F322819D2FA8944800A0E868 = {
 						CreatedOnToolsVersion = 26.3;
 					};
+					F32282132FA9E0E800A0E868 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 				};
 			};
 			buildConfigurationList = F32281992FA8944800A0E868 /* Build configuration list for PBXProject "Scopino" */;
@@ -107,12 +182,16 @@
 			);
 			mainGroup = F32281952FA8944800A0E868;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F32282272FA9EB3500A0E868 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F322819F2FA8944800A0E868 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				F322819D2FA8944800A0E868 /* Scopino */,
+				F32282132FA9E0E800A0E868 /* ScopinoHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -129,6 +208,13 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		F322819A2FA8944800A0E868 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F32282102FA9E0E800A0E868 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -261,8 +347,10 @@
 		F32281AA2FA8944A00A0E868 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Scopino/Resources/Scopino.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -273,6 +361,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Scopino/HelpTool/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Scopino;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -296,8 +385,10 @@
 		F32281AB2FA8944A00A0E868 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Scopino/Resources/Scopino.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -308,6 +399,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Scopino/HelpTool/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Scopino;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -323,6 +415,34 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F32282192FA9E0E800A0E868 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ScopinoHelper/ScopinoHelper.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = E2BL3D4ETT;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F322821A2FA9E0E800A0E868 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ScopinoHelper/ScopinoHelper.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = E2BL3D4ETT;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -349,7 +469,35 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		F32282182FA9E0E800A0E868 /* Build configuration list for PBXNativeTarget "ScopinoHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F32282192FA9E0E800A0E868 /* Debug */,
+				F322821A2FA9E0E800A0E868 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F32282272FA9EB3500A0E868 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F32282282FA9EB3500A0E868 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F32282272FA9EB3500A0E868 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F32281962FA8944800A0E868 /* Project object */;
 }

@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 import UserNotifications
+import Sparkle
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -34,14 +35,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupMenuBar()
         setupDetector()
 
-        // Triggera la comparsa di Scopino nella lista FDA
-        PermissionChecker.requestFDAPermission()
+        // Sparkle
+        UpdateService.shared.setup()
 
-        // Mostra onboarding se FDA non concessa
-        if PermissionChecker.needsOnboarding() {
-            showOnboarding()
-        }
-        
+        // XPC Helper
+        HelperInstaller.shared.installIfNeeded()
+
         // Notifiche
         UNUserNotificationCenter.current().delegate = self
         NotificationService.shared.setupCategories()
@@ -76,7 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Cronologia", action: #selector(showHistory), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Impostazioni…", action: #selector(showSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Impostazioni", action: #selector(showSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Cerca aggiornamenti", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Esci", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem?.menu = menu
@@ -123,7 +123,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func showProposalWindow(for session: CleanupSession) {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -287,6 +287,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func removeSession(_ session: CleanupSession) {
         activeSessions.removeAll { $0.id == session.id }
+    }
+    
+    @objc private func checkForUpdates() {
+        UpdateService.shared.checkForUpdates()
     }
 
     @objc private func togglePopover() {

@@ -60,6 +60,19 @@
     <!-- Nessuna finestra principale — menu bar only -->
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    
+    <!-- Sparkle -->
+    <key>SUFeedURL</key>
+    <string>https://tuosito.com/scopino/appcast.xml</string>
+
+    <key>SUPublicEDKey</key>
+    <string>KftCQgOvjYgmH0a48hK8AEX0jSLYNxpF08hMwtNHEBM=</string>
+
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+
+    <key>SUShowReleaseNotes</key>
+    <true/>
 
 </dict>
 </plist>

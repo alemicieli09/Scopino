@@ -53,7 +53,6 @@ final class ResidualCleaner {
                 let fm = FileManager.default
                 let url = URL(fileURLWithPath: item.path)
 
-                // Verifica che il file esista ancora
                 guard fm.fileExists(atPath: item.path) else {
                     continuation.resume(returning: .skipped(
                         path: item.path,
@@ -62,33 +61,42 @@ final class ResidualCleaner {
                     return
                 }
 
-                // Protezione: non toccare mai path di sistema critici
                 if self.isProtectedPath(item.path) {
                     continuation.resume(returning: .skipped(
                         path: item.path,
-                        reason: "Path protetto — operazione bloccata per sicurezza"
+                        reason: "Path protetto"
                     ))
                     return
                 }
 
+                // File privilegiati → delega all'XPC Helper
+                if item.requiresPrivileges {
+                    Task {
+                        let errors = await HelperInstaller.shared.removeItems(
+                            atPaths: [item.path]
+                        )
+                        if errors.first?.isEmpty == true {
+                            continuation.resume(returning: .success(path: item.path))
+                        } else {
+                            continuation.resume(returning: .skipped(
+                                path: item.path,
+                                reason: errors.first ?? "Errore helper"
+                            ))
+                        }
+                    }
+                    return
+                }
+
+                // File normali → Trash
                 do {
                     var resultURL: NSURL?
                     try fm.trashItem(at: url, resultingItemURL: &resultURL)
                     continuation.resume(returning: .success(path: item.path))
                 } catch {
-                    // Se trashItem fallisce (es. /Library di sistema) proviamo
-                    // a segnalarlo come "requires privileges" invece di crashare
-                    if item.requiresPrivileges {
-                        continuation.resume(returning: .skipped(
-                            path: item.path,
-                            reason: "Richiede privilegi elevati (XPC Helper)"
-                        ))
-                    } else {
-                        continuation.resume(returning: .failed(
-                            path: item.path,
-                            error: error
-                        ))
-                    }
+                    continuation.resume(returning: .failed(
+                        path: item.path,
+                        error: error
+                    ))
                 }
             }
         }

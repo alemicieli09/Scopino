@@ -7,12 +7,14 @@
 
 import SwiftUI
 import ServiceManagement
+import Sparkle
 
 struct SettingsView: View {
 
     @State private var hasFullDiskAccess = PermissionChecker.hasFDAPermission()
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var notificationsEnabled = false
+    @State private var automaticUpdates = true
     @State private var checkTimer: Timer?
 
     var body: some View {
@@ -30,6 +32,7 @@ struct SettingsView: View {
                 VStack(spacing: 12) {
                     launchAtLoginSection
                     notificationsSection
+                    updatesSection
                     fdaSection
                     aboutSection
                 }
@@ -45,15 +48,25 @@ struct SettingsView: View {
 
     private var header: some View {
         HStack(spacing: 14) {
-            Image(systemName: "trash.slash.circle.fill")
-                .font(.system(size: 36))
-                .foregroundStyle(Color.red)
+            // Icona app custom
+            Group {
+                if let icon = NSImage(named: "scopino-icona-no_bg") {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48, height: 48)
+                } else {
+                    Image(systemName: "trash.slash.circle.fill")
+                        .font(.system(size: 36))
+                        .foregroundStyle(Color.red)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("Scopino")
                     .font(.title2)
                     .fontWeight(.semibold)
-                Text("Pulizia automatica residui app")
+                Text("Pulizia automatica residui app disinstallate")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -183,6 +196,94 @@ struct SettingsView: View {
         }
         .task {
             notificationsEnabled = await NotificationService.shared.isAuthorized()
+        }
+    }
+    
+    private var updatesSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            Text("AGGIORNAMENTI")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 6)
+
+            VStack(spacing: 0) {
+
+                // Aggiornamenti automatici
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.purple.opacity(0.12))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.purple)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Aggiornamenti automatici")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Text("Controlla e installa aggiornamenti in background.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: $automaticUpdates)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .onChange(of: automaticUpdates) { _, newValue in
+                            UpdateService.shared.updater?.automaticallyChecksForUpdates = newValue
+                        }
+                }
+                .padding(14)
+
+                Divider().padding(.leading, 72)
+
+                // Cerca aggiornamenti manualmente
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.purple.opacity(0.08))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "magnifyingglass.circle")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.purple)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Cerca aggiornamenti")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Text("Controlla subito se è disponibile una nuova versione.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    Button("Controlla") {
+                        UpdateService.shared.checkForUpdates()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.purple)
+                    .controlSize(.small)
+                }
+                .padding(14)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+            )
+        }
+        .onAppear {
+            automaticUpdates = UpdateService.shared.updater?.automaticallyChecksForUpdates ?? true
         }
     }
 
