@@ -47,7 +47,7 @@ final class UpdateService: NSObject {
 extension UpdateService: SPUUpdaterDelegate {
 
     func feedURLString(for updater: SPUUpdater) -> String? {
-        return "https://tuosito.com/scopino/appcast.xml"
+        return "https://alemicieli09.github.io/Scopino/appcast/appcast.xml"
     }
 
     func updater(

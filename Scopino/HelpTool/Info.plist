@@ -63,7 +63,7 @@
     
     <!-- Sparkle -->
     <key>SUFeedURL</key>
-    <string>https://tuosito.com/scopino/appcast.xml</string>
+    <string>https://alemicieli09.github.io/Scopino/appcast/appcast.xml</string>
 
     <key>SUPublicEDKey</key>
     <string>KftCQgOvjYgmH0a48hK8AEX0jSLYNxpF08hMwtNHEBM=</string>
