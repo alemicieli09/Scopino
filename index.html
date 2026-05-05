@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scopino — Pulizia automatica per Mac</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #3B82F6;
+    --blue-dark: #1D4ED8;
+    --blue-light: #EFF6FF;
+    --green: #10B981;
+    --green-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #F5F3FF;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-700: #334155;
+    --gray-900: #0F172A;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 4px 24px rgba(15,23,42,0.08);
+    --shadow-lg: 0 12px 48px rgba(15,23,42,0.12);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #F8FAFC;
+    color: var(--gray-900);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 48px;
+    background: rgba(248,250,252,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--gray-900);
+    text-decoration: none;
+  }
+  .nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--gray-500);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gray-900); }
+  .btn-nav {
+    background: var(--gray-900);
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: background 0.2s !important;
+  }
+  .btn-nav:hover { background: var(--gray-700) !important; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    background: linear-gradient(180deg, #EFF6FF 0%, #F8FAFC 60%);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .hero-icon {
+    width: 100px; height: 100px;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(59,130,246,0.2);
+    margin-bottom: 28px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .hero h1 {
+    font-size: clamp(52px, 8vw, 88px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    color: var(--gray-900);
+    line-height: 1.0;
+    margin-bottom: 20px;
+  }
+  .hero h1 span { color: var(--blue); }
+  .hero p {
+    font-size: clamp(18px, 2.5vw, 22px);
+    color: var(--gray-500);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  .hero-actions { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gray-900);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.2);
+  }
+  .btn-primary:hover { background: var(--blue); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.3); }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: var(--gray-700);
+    padding: 16px 28px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    border: 1.5px solid var(--gray-200);
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--gray-400); transform: translateY(-2px); }
+  .hero-meta {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* ── MOCKUP ── */
+  .mockup-section {
+    padding: 0 24px 80px;
+    display: flex;
+    justify-content: center;
+  }
+  .mockup-wrapper {
+    max-width: 780px;
+    width: 100%;
+    background: white;
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+  .mockup-bar {
+    background: var(--gray-100);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #FF5F57; }
+  .dot-yellow { background: #FFBD2E; }
+  .dot-green { background: #28C840; }
+  .mockup-title {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+  .mockup-body { padding: 28px; }
+  .mockup-app-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .mockup-app-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+  }
+  .mockup-app-info h3 { font-size: 17px; font-weight: 700; }
+  .mockup-app-info p { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+  .mockup-stats {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+  }
+  .mockup-stat {
+    text-align: right;
+  }
+  .mockup-stat .val { font-size: 18px; font-weight: 800; color: var(--blue); }
+  .mockup-stat .lbl { font-size: 11px; color: var(--gray-400); }
+  .residual-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .residual-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--gray-50);
+    border-radius: 10px;
+    border: 1px solid var(--gray-100);
+  }
+  .residual-check {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .residual-icon { font-size: 16px; }
+  .residual-info { flex: 1; }
+  .residual-name { font-size: 13px; font-weight: 600; font-family: monospace; }
+  .residual-path { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+  .residual-size { font-size: 12px; font-weight: 600; color: var(--gray-500); }
+  .residual-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--blue-light);
+    color: var(--blue);
+  }
+  .mockup-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-100);
+  }
+  .mockup-total { font-size: 13px; color: var(--gray-500); }
+  .mockup-total strong { color: var(--gray-900); font-size: 16px; }
+  .mockup-actions { display: flex; gap: 10px; }
+  .btn-ignore {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1.5px solid var(--gray-200);
+    background: white;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-500);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-clean {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    background: #EF4444;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── STATS BANNER ── */
+  .stats-banner {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 20px;
+    max-width: 780px;
+    margin: 0 auto 80px;
+    padding: 28px 40px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 24px;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--gray-900);
+    line-height: 1;
+  }
+  .stat-num span { color: var(--blue); }
+  .stat-label { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+  .stat-divider { width: 1px; height: 48px; background: var(--gray-200); }
+
+  /* ── SECTION ── */
+  section { padding: 80px 24px; }
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--gray-900);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .section-sub {
+    font-size: 17px;
+    color: var(--gray-500);
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  /* ── FEATURES ── */
+  .features { background: white; }
+  .features-inner { max-width: 1100px; margin: 0 auto; }
+  .features-header { text-align: center; margin-bottom: 56px; }
+  .features-header .section-sub { margin: 0 auto; }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature-card {
+    background: var(--gray-50);
+    border: 1.5px solid var(--gray-100);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: all 0.2s;
+  }
+  .feature-card:hover {
+    border-color: var(--blue);
+    box-shadow: 0 8px 32px rgba(59,130,246,0.1);
+    transform: translateY(-4px);
+  }
+  .feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .feature-icon.blue { background: var(--blue-light); }
+  .feature-icon.green { background: var(--green-light); }
+  .feature-icon.purple { background: var(--purple-light); }
+  .feature-icon.orange { background: #FFF7ED; }
+  .feature-icon.red { background: #FEF2F2; }
+  .feature-icon.teal { background: #F0FDFA; }
+  .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p { font-size: 14px; color: var(--gray-500); line-height: 1.6; }
+
+  /* ── MODES ── */
+  .modes-section { background: var(--gray-50); }
+  .modes-inner { max-width: 1000px; margin: 0 auto; }
+  .modes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 40px;
+  }
+  .mode-card {
+    background: white;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 28px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .mode-card.recommended { border-color: var(--blue); }
+  .mode-badge {
+    position: absolute;
+    top: -12px; left: 24px;
+    background: var(--blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .mode-badge.pro { background: var(--purple); }
+  .mode-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .mode-icon { font-size: 28px; }
+  .mode-card h3 { font-size: 19px; font-weight: 800; }
+  .mode-card p { font-size: 14px; color: var(--gray-500); line-height: 1.6; }
+
+  /* ── PRICING ── */
+  .pricing { background: white; }
+  .pricing-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 48px;
+    align-items: start;
+  }
+  .pricing-card {
+    background: var(--gray-50);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    text-align: left;
+    transition: all 0.2s;
+  }
+  .pricing-card.popular {
+    background: var(--gray-900);
+    border-color: var(--gray-900);
+    color: white;
+    transform: scale(1.04);
+  }
+  .pricing-card.popular .plan-desc { color: #94A3B8; }
+  .pricing-card.popular .price-period { color: #94A3B8; }
+  .popular-badge {
+    display: inline-flex;
+    background: var(--blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+  .plan-icon { font-size: 28px; margin-bottom: 10px; }
+  .plan-name { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .plan-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 16px; line-height: 1.5; }
+  .price { font-size: 40px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+  .price-period { font-size: 13px; color: var(--gray-400); margin-bottom: 24px; }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .plan-features li { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .plan-features li::before { content: '✓'; font-weight: 700; color: var(--green); font-size: 13px; }
+  .pricing-card.popular .plan-features li::before { color: #34D399; }
+  .btn-plan {
+    display: block;
+    text-align: center;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+  }
+  .btn-plan-outline {
+    background: white;
+    color: var(--gray-700);
+    border: 2px solid var(--gray-200);
+  }
+  .btn-plan-outline:hover { border-color: var(--gray-400); }
+  .btn-plan-primary {
+    background: var(--blue);
+    color: white;
+  }
+  .btn-plan-primary:hover { background: var(--blue-dark); }
+  .btn-plan-dark {
+    background: white;
+    color: var(--gray-900);
+  }
+  .btn-plan-dark:hover { background: var(--gray-100); }
+
+  /* ── TRUST ── */
+  .trust-section {
+    background: var(--gray-50);
+    padding: 60px 24px;
+  }
+  .trust-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .trust-card {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .trust-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .trust-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .trust-card p { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: var(--gray-900);
+    padding: 100px 24px;
+    text-align: center;
+  }
+  .cta-section h2 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    color: white;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+  }
+  .cta-section p { font-size: 18px; color: #94A3B8; margin-bottom: 36px; }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    color: var(--gray-900);
+    padding: 18px 36px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 17px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .cta-btn:hover { background: var(--blue); color: white; transform: translateY(-2px); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--gray-900);
+    border-top: 1px solid #1E293B;
+    padding: 32px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    text-decoration: none;
+  }
+  .footer-logo img { width: 24px; height: 24px; border-radius: 6px; }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { color: #64748B; font-size: 14px; text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: white; }
+  .footer-copy { color: #475569; font-size: 13px; }
+
+  /* ── ANIMATIONS ── */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+  .fade-up:nth-child(2) { transition-delay: 0.1s; }
+  .fade-up:nth-child(3) { transition-delay: 0.2s; }
+  .fade-up:nth-child(4) { transition-delay: 0.3s; }
+  .fade-up:nth-child(5) { transition-delay: 0.4s; }
+  .fade-up:nth-child(6) { transition-delay: 0.5s; }
+
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .features-grid, .pricing-grid { grid-template-columns: 1fr; }
+    .modes-grid { grid-template-columns: 1fr; }
+    .trust-inner { grid-template-columns: 1fr; }
+    .stats-banner { flex-direction: column; gap: 20px; }
+    .stat-divider { display: none; }
+    .pricing-card.popular { transform: none; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img src="ScopinoIcon.png" alt="Scopino">
+    Scopino
+  </a>
+  <div class="nav-links">
+    <a href="#funzionalita">Funzionalità</a>
+    <a href="#modalita">Come funziona</a>
+    <a href="#prezzi">Prezzi</a>
+    <a href="https://github.com/alemicieli09/Scopino" target="_blank">GitHub</a>
+    <a href="https://github.com/alemicieli09/Scopino/releases/download/v1.0/Scopino.dmg" class="btn-nav">↓ Scarica gratis</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <img src="Scopino/ScopinoIcon.png" alt="Scopino" class="hero-icon">
+  <h1>Il tuo Mac,<br><span>sempre pulito.</span></h1>
+  <p>Scopino rileva automaticamente le app disinstallate e rimuove tutti i file residui in un click.</p>
+  <div class="hero-actions">
+    <a href="https://github.com/alemicieli09/Scopino/releases/download/v1.0/Scopino.dmg" class="btn-primary">
+      ↓ Scarica Scopino Gratis
+    </a>
+    <a href="https://github.com/alemicieli09/Scopino" target="_blank" class="btn-secondary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"/></svg> GitHub
+    </a>
+  </div>
+  <div class="hero-meta">
+    <span> macOS 13+</span>
+    <span>Notarizzato Apple</span>
+    <span>Menu bar app</span>
+  </div>
+</div>
+
+<!-- MOCKUP -->
+<div class="mockup-section">
+  <div class="mockup-wrapper">
+    <div class="mockup-bar">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <div class="mockup-title">Scopino — Spotify</div>
+    </div>
+    <div class="mockup-body">
+      <div class="mockup-app-header">
+        <div class="mockup-app-icon">🎵</div>
+        <div class="mockup-app-info">
+          <h3>Residui trovati per Spotify</h3>
+          <p>com.spotify.client · rimosso oggi alle 14:32</p>
+        </div>
+        <div class="mockup-stats">
+          <div class="mockup-stat">
+            <div class="val">847 MB</div>
+            <div class="lbl">liberabili</div>
+          </div>
+        </div>
+      </div>
+      <div class="residual-list">
+        <div class="residual-item">
+          <div class="residual-check">✓</div>
+          <div class="residual-icon">📁</div>
+          <div class="residual-info">
+            <div class="residual-name">com.spotify.client</div>
+            <div class="residual-path">~/Library/Application Support/Spotify</div>
+          </div>
+          <div class="residual-size">612 MB</div>
+          <div class="residual-badge">Cache</div>
+        </div>
+        <div class="residual-item">
+          <div class="residual-check">✓</div>
+          <div class="residual-icon">📄</div>
+          <div class="residual-info">
+            <div class="residual-name">com.spotify.client.plist</div>
+            <div class="residual-path">~/Library/Preferences</div>
+          </div>
+          <div class="residual-size">12 KB</div>
+          <div class="residual-badge">Preferenze</div>
+        </div>
+        <div class="residual-item">
+          <div class="residual-check">✓</div>
+          <div class="residual-icon">📦</div>
+          <div class="residual-info">
+            <div class="residual-name">com.spotify.client.savedState</div>
+            <div class="residual-path">~/Library/Saved Application State</div>
+          </div>
+          <div class="residual-size">235 MB</div>
+          <div class="residual-badge">Stato</div>
+        </div>
+      </div>
+      <div class="mockup-footer">
+        <div class="mockup-total">
+          Spazio liberabile <strong>847 MB</strong>
+        </div>
+        <div class="mockup-actions">
+          <button class="btn-ignore">Ignora</button>
+          <button class="btn-clean">🗑 Pulisci ora</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="padding: 0 24px; max-width: 1100px; margin: 0 auto;">
+  <div class="stats-banner">
+    <div class="stat-item">
+      <div class="stat-num">12<span>+</span></div>
+      <div class="stat-label">path di sistema monitorati</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num">15<span>+</span></div>
+      <div class="stat-label">app popolari nel database</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num">100<span>%</span></div>
+      <div class="stat-label">dati restano sul tuo Mac</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num">0</div>
+      <div class="stat-label">processi in background inutili</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="funzionalita">
+  <div class="features-inner">
+    <div class="features-header">
+      <div class="section-tag">✦ Funzionalità</div>
+      <h2 class="section-title">Tutto quello che ti serve,<br>niente di superfluo.</h2>
+      <p class="section-sub">Scopino fa una cosa sola e la fa bene: trovare e rimuovere i file residui delle app che hai disinstallato.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feature-icon blue">⚡</div>
+        <h3>Rilevamento automatico</h3>
+        <p>Monitora /Applications in tempo reale con FSEvents. Appena rimuovi un'app, Scopino si attiva entro 1-2 secondi.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon green">🔍</div>
+        <h3>Ricerca intelligente</h3>
+        <p>Scansiona 12+ path di sistema e usa un database di app popolari per trovare anche i file nascosti nei percorsi non standard.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon red">🗑</div>
+        <h3>Pulizia sicura</h3>
+        <p>I file vengono spostati nel Cestino, non eliminati definitivamente. Puoi sempre recuperarli se hai cambiato idea.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon orange">🔔</div>
+        <h3>Notifiche native</h3>
+        <p>Ricevi una notifica macOS quando vengono trovati residui, con azione diretta "Pulisci ora" senza aprire l'app.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon purple">🚀</div>
+        <h3>Avvia al login</h3>
+        <p>Scopino si avvia automaticamente con il Mac e lavora silenziosamente in background senza occupare risorse.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon teal">📋</div>
+        <h3>Cronologia completa</h3>
+        <p>Tieni traccia di tutte le pulizie effettuate, con data, app, elementi rimossi e spazio totale liberato.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODES -->
+<section class="modes-section" id="modalita">
+  <div class="modes-inner">
+    <div class="section-tag">✦ Modalità di pulizia</div>
+    <h2 class="section-title">Scegli il livello<br>di pulizia.</h2>
+    <div class="modes-grid">
+      <div class="mode-card recommended">
+        <div class="mode-badge">Consigliata</div>
+        <div class="mode-header">
+          <div class="mode-icon">🛡️</div>
+          <h3>Safe — Zero rischio</h3>
+        </div>
+        <p>Rimuove solo i file non critici come preferenze, cache e log. Ideale per l'uso quotidiano — nessun rischio di eliminare qualcosa di importante.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-badge pro">PRO</div>
+        <div class="mode-header">
+          <div class="mode-icon">🚀</div>
+          <h3>Deep — Pulizia completa</h3>
+        </div>
+        <p>Rimuove anche i file più nascosti nei path di sistema, inclusi LaunchAgents e LaunchDaemons. Per liberare il massimo spazio possibile.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="prezzi">
+  <div class="pricing-inner">
+    <div class="section-tag">✦ Prezzi</div>
+    <h2 class="section-title">Scegli il piano<br>perfetto per te.</h2>
+    <p class="section-sub" style="margin: 0 auto;">Inizia gratis. Passa a Pro solo se vuoi di più.</p>
+    <div class="pricing-grid">
+
+      <div class="pricing-card">
+        <div class="plan-icon">🌱</div>
+        <div class="plan-name">Free</div>
+        <div class="plan-desc">Pulizia di base per tutti i giorni.</div>
+        <div class="price">Gratis</div>
+        <div class="price-period">Per sempre</div>
+        <ul class="plan-features">
+          <li>Rilevamento automatico app</li>
+          <li>Pulizia fino a 500 MB</li>
+          <li>Path standard (12+)</li>
+          <li>Notifiche macOS</li>
+          <li>Cronologia 30 giorni</li>
+        </ul>
+        <a href="https://github.com/alemicieli09/Scopino/releases/download/v1.0/Scopino.dmg" class="btn-plan btn-plan-outline">Scarica gratis</a>
+      </div>
+
+      <div class="pricing-card popular">
+        <div class="popular-badge">⭐ PIÙ POPOLARE</div>
+        <div class="plan-icon">🏆</div>
+        <div class="plan-name">Una tantum</div>
+        <div class="plan-desc">Accesso completo per sempre. Paghi una volta sola.</div>
+        <div class="price">9,99 €</div>
+        <div class="price-period">Pagamento unico</div>
+        <ul class="plan-features">
+          <li>Tutto di Free</li>
+          <li>Pulizia illimitata</li>
+          <li>Modalità Deep Clean</li>
+          <li>XPC Helper (file root)</li>
+          <li>Cronologia illimitata</li>
+          <li>Aggiornamenti a vita</li>
+        </ul>
+        <a href="#" class="btn-plan btn-plan-dark">Acquista ora</a>
+      </div>
+
+      <div class="pricing-card">
+        <div class="plan-icon">🚀</div>
+        <div class="plan-name">Pay per Deep Clean</div>
+        <div class="plan-desc">Paga solo quando esegui una pulizia profonda.</div>
+        <div class="price">4,99 €</div>
+        <div class="price-period">Per ogni Deep Clean</div>
+        <ul class="plan-features">
+          <li>Tutto di Free</li>
+          <li>Deep Clean on demand</li>
+          <li>Nessun abbonamento</li>
+          <li>Paghi solo se serve</li>
+          <li>Ricevuta per ogni pulizia</li>
+        </ul>
+        <a href="#" class="btn-plan btn-plan-outline">Inizia gratis</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<div class="trust-section">
+  <div class="trust-inner">
+    <div class="trust-card">
+      <div class="trust-icon" style="background:#EFF6FF;">🔒</div>
+      <div>
+        <h4>Sicuro al 100%</h4>
+        <p>Non eliminiamo mai file di sistema o dati personali. Lista nera di path protetti integrata.</p>
+      </div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon" style="background:#ECFDF5;">🏠</div>
+      <div>
+        <h4>Privato by design</h4>
+        <p>Tutto resta sul tuo Mac. Nessun dato viene inviato a server esterni. Zero telemetria.</p>
+      </div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon" style="background:#F5F3FF;">✅</div>
+      <div>
+        <h4>Aggiornato</h4>
+        <p>Compatibile con le ultime versioni di macOS. Notarizzato Apple con Developer ID.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Il tuo Mac ti ringrazierà.</h2>
+  <p>Scarica Scopino gratis e inizia a pulire in 30 secondi.</p>
+  <a href="https://github.com/alemicieli09/Scopino/releases/download/v1.0/Scopino.dmg" class="cta-btn">
+    ↓ Scarica Scopino è gratis
+  </a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="footer-logo">
+    <img src="ScopinoIcon.png" alt="Scopino">
+    Scopino
+  </a>
+  <div class="footer-links">
+    <a href="https://github.com/alemicieli09/Scopino" target="_blank">GitHub</a>
+    <a href="appcast/notes/1.0.html">Note di rilascio</a>
+    <a href="appcast/appcast.xml">Appcast</a>
+  </div>
+  <div class="footer-copy">© 2026 Alessandro Micieli</div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

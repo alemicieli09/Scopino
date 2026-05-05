@@ -1,0 +1,25 @@
+/* Finestra "sei aggiornato" */
+"You're up to date!" = "Sei aggiornato!";
+"is currently the newest version available." = "è attualmente la versione più recente disponibile.";
+
+/* Finestra aggiornamento disponibile */
+"An update is available!" = "È disponibile un aggiornamento!";
+"version %@ is now available--you have version %@. Would you like to download it now?" = "la versione %@ è disponibile — hai la versione %@. Vuoi scaricarla ora?";
+"Release Notes" = "Note di rilascio";
+"Version History" = "Cronologia versioni";
+
+/* Bottoni */
+"Install Update" = "Installa aggiornamento";
+"Skip This Version" = "Salta questa versione";
+"Remind Me Later" = "Ricordamelo dopo";
+"Cancel" = "Annulla";
+"OK" = "OK";
+
+/* Download */
+"Downloading update…" = "Download aggiornamento…";
+"Installing update…" = "Installazione aggiornamento…";
+
+/* Errori */
+"Update Error!" = "Errore aggiornamento!";
+"No updates found." = "Nessun aggiornamento trovato.";
+"Could not connect to the update server." = "Impossibile connettersi al server degli aggiornamenti.";
