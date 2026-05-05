@@ -1,12 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "icon_16x16.png",
+      "filename" : "Scopino-iOS-Default-1024x1024@1x.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "icon_16x16@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

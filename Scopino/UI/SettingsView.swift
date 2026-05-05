@@ -6,16 +6,18 @@
 //
 
 import SwiftUI
+import ServiceManagement
 
 struct SettingsView: View {
 
     @State private var hasFullDiskAccess = PermissionChecker.hasFDAPermission()
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var notificationsEnabled = false
     @State private var checkTimer: Timer?
 
     var body: some View {
         VStack(spacing: 0) {
 
-            // Header
             header
                 .padding(.top, 28)
                 .padding(.horizontal, 28)
@@ -24,16 +26,17 @@ struct SettingsView: View {
             Divider()
                 .padding(.horizontal, 20)
 
-            // Sezioni
             ScrollView {
                 VStack(spacing: 12) {
+                    launchAtLoginSection
+                    notificationsSection
                     fdaSection
                     aboutSection
                 }
                 .padding(20)
             }
         }
-        .frame(width: 480, height: 340)
+        .frame(width: 480, height: 500)
         .onAppear { startPolling() }
         .onDisappear { stopPolling() }
     }
@@ -59,12 +62,135 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Launch at Login
+
+    private var launchAtLoginSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            Text("AVVIO")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 6)
+
+            HStack(spacing: 14) {
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.blue.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "power")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.blue)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Avvia al login")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text("Scopino si avvia automaticamente all'accesso.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Toggle("", isOn: $launchAtLogin)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        toggleLaunchAtLogin(newValue)
+                    }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+            )
+        }
+    }
+
+    private func toggleLaunchAtLogin(_ enable: Bool) {
+        do {
+            if enable {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            print("[LaunchAtLogin] Errore: \(error)")
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
+    }
+
+    // MARK: - Notifications Section
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            Text("NOTIFICHE")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 6)
+
+            HStack(spacing: 14) {
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.orange.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.orange)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Notifiche")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text(notificationsEnabled
+                         ? "Attive — ricevi avvisi quando vengono trovati residui."
+                         : "Disattivate — abilita per ricevere avvisi.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                if notificationsEnabled {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .font(.title3)
+                } else {
+                    Button("Abilita") {
+                        Task { await NotificationService.shared.requestAuthorization() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .controlSize(.small)
+                }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+            )
+        }
+        .task {
+            notificationsEnabled = await NotificationService.shared.isAuthorized()
+        }
+    }
+
     // MARK: - FDA Section
 
     private var fdaSection: some View {
         VStack(alignment: .leading, spacing: 0) {
 
-            // Titolo sezione
             Text("PERMESSI")
                 .font(.caption)
                 .fontWeight(.semibold)
@@ -72,10 +198,8 @@ struct SettingsView: View {
                 .padding(.horizontal, 14)
                 .padding(.bottom, 6)
 
-            // Card
             HStack(spacing: 14) {
 
-                // Icona stato
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(hasFullDiskAccess ? Color.green.opacity(0.12) : Color.red.opacity(0.10))
@@ -86,7 +210,6 @@ struct SettingsView: View {
                         .foregroundStyle(hasFullDiskAccess ? .green : .red)
                 }
 
-                // Testo
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Accesso completo al disco")
                         .font(.subheadline)
@@ -102,7 +225,6 @@ struct SettingsView: View {
 
                 Spacer()
 
-                // Bottone azione
                 if hasFullDiskAccess {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
@@ -124,7 +246,7 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - About section
+    // MARK: - About Section
 
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -174,6 +296,10 @@ struct SettingsView: View {
             let granted = PermissionChecker.hasFDAPermission()
             withAnimation(.easeInOut(duration: 0.3)) {
                 hasFullDiskAccess = granted
+            }
+            // Notifiche — aggiorna su MainActor esplicitamente
+            Task { @MainActor in
+                notificationsEnabled = await NotificationService.shared.isAuthorized()
             }
         }
     }

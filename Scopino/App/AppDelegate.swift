@@ -7,6 +7,7 @@
 
 import AppKit
 import SwiftUI
+import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -37,6 +38,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PermissionChecker.requestFDAPermission()
 
         // Mostra onboarding se FDA non concessa
+        if PermissionChecker.needsOnboarding() {
+            showOnboarding()
+        }
+        
+        // Notifiche
+        UNUserNotificationCenter.current().delegate = self
+        NotificationService.shared.setupCategories()
+        Task { await NotificationService.shared.requestAuthorization() }
+
+        // FDA
+        PermissionChecker.requestFDAPermission()
         if PermissionChecker.needsOnboarding() {
             showOnboarding()
         }
@@ -95,6 +107,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         session.residuals = residuals
+
+        // Notifica residui trovati
+        NotificationService.shared.notifyResidualsFound(
+            for: app,
+            count: residuals.count,
+            totalSize: session.displayTotalSize
+        )
+
         showProposalWindow(for: session)
     }
 
@@ -152,8 +172,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let results = await cleaner.clean(items: session.residuals)
         session.results = results
         session.state = .completed
-
         SessionStore.shared.save(session)
+
+        // Notifica risultato
+        if session.failedCount > 0 {
+            NotificationService.shared.notifyCleanupPartial(
+                for: session.app,
+                removed: session.successCount,
+                failed: session.failedCount
+            )
+        } else {
+            NotificationService.shared.notifyCleanupCompleted(
+                for: session.app,
+                removed: session.successCount,
+                totalSize: session.displayTotalSize
+            )
+        }
     }
 
     // MARK: - History Window
@@ -266,4 +300,46 @@ enum ProposalAction {
     case clean
     case cancel
     case close
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+
+    /// Notifica ricevuta mentre l'app è in foreground — mostrala comunque.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        return [.banner, .sound]
+    }
+
+    /// L'utente ha tappato la notifica o un'azione.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        let userInfo = response.notification.request.content.userInfo
+        let appName  = userInfo["appName"] as? String ?? ""
+
+        switch response.actionIdentifier {
+        case "CLEAN_NOW":
+            // Porta in primo piano la finestra di proposta se ancora aperta
+            await MainActor.run {
+                NSApp.activate(ignoringOtherApps: true)
+                if let window = proposalWindows.first(where: {
+                    $0.title.contains(appName)
+                }) {
+                    window.makeKeyAndOrderFront(nil)
+                }
+            }
+        case "IGNORE":
+            break
+        default:
+            // Tap sulla notifica → porta in primo piano
+            await MainActor.run {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+    }
 }
