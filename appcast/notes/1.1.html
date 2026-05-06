@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    font-family: -apple-system, 'SF Pro Text', sans-serif;
+    font-size: 13px;
+    padding: 16px;
+    color: #1C1C1E;
+    line-height: 1.5;
+  }
+  h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .date { font-size: 11px; color: #86868B; margin-bottom: 16px; }
+  h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #86868B; margin: 14px 0 6px; }
+  ul { margin: 0; padding-left: 16px; }
+  li { margin-bottom: 5px; }
+  .new::before { content: '✦ '; color: #3B82F6; }
+  .fix::before { content: '⚙ '; color: #F97316; }
+  .ui::before  { content: '◈ '; color: #8B5CF6; }
+</style>
+</head>
+<body>
+
+<h2>Scopino 1.1</h2>
+<div class="date">Maggio 2026</div>
+
+<h3>Novità</h3>
+<ul>
+  <li class="new">Aggiornamenti automatici via Sparkle — Scopino si aggiorna da solo</li>
+  <li class="new">Notifiche macOS native con azioni interattive ("Pulisci ora" / "Ignora")</li>
+  <li class="new">Avvia al login — Scopino parte automaticamente con il Mac</li>
+  <li class="new">XPC Helper per la rimozione di file privilegiati in /Library/LaunchDaemons</li>
+  <li class="new">Finestra Impostazioni con controllo completo di permessi, notifiche e aggiornamenti</li>
+  <li class="new">Localizzazione italiana della finestra di aggiornamento Sparkle</li>
+</ul>
+
+<h3>Miglioramenti UI</h3>
+<ul>
+  <li class="ui">Icona menu bar personalizzata (template image 24×24)</li>
+  <li class="ui">Schermata di onboarding per la richiesta Full Disk Access</li>
+  <li class="ui">Sezione Impostazioni con stato FDA in tempo reale (polling ogni 2 secondi)</li>
+  <li class="ui">Badge notifiche attive/disattivate nelle Impostazioni</li>
+  <li class="ui">Toggle aggiornamenti automatici con controllo manuale</li>
+  <li class="ui">Finestra Cronologia non duplicabile (evita aperture multiple)</li>
+  <li class="ui">Finestra Impostazioni non duplicabile</li>
+</ul>
+
+<h3>Fix</h3>
+<ul>
+  <li class="fix">Corretto stato "Annullata" nella cronologia dopo pulizia completata</li>
+  <li class="fix">Corretto "Totale liberato: Zero KB" nella cronologia</li>
+  <li class="fix">Risolto conflitto Swift 6 con iterazione FSEvents enumerator</li>
+  <li class="fix">Risolto warning MainActor su notificationsEnabled in SettingsView</li>
+</ul>
+
+</body>
+</html>
