@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ScopinoIcon.png" width="128" height="128" alt="Scopino icon">
+  <img src="web/ScopinoIcon.png" width="128" height="128" alt="Scopino icon">
 </p>
 
 # Scopino
