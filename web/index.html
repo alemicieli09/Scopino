@@ -84,16 +84,16 @@
 
   /* ── HERO ── */
   .hero {
-    min-height: 100vh;
+    min-height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 120px 24px 80px;
+    padding: 120px 24px 20px;
     background: linear-gradient(180deg, #EFF6FF 0%, #F8FAFC 60%);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
   .hero::before {
     content: '';
@@ -309,16 +309,19 @@
 
   /* ── STATS BANNER ── */
   .stats-banner {
-    background: white;
-    border: 1.5px solid var(--gray-200);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
     border-radius: 20px;
     max-width: 780px;
-    margin: 0 auto 80px;
+    width: 100%;
     padding: 28px 40px;
     display: flex;
     justify-content: space-around;
     align-items: center;
     gap: 24px;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
   }
   .stat-item { text-align: center; }
   .stat-num {
@@ -404,7 +407,7 @@
 
   /* ── MODES ── */
   .modes-section { background: var(--gray-50); }
-  .modes-inner { max-width: 1000px; margin: 0 auto; }
+  .modes-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
   .modes-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -418,6 +421,7 @@
     padding: 28px;
     position: relative;
     transition: all 0.2s;
+    text-align: left;
   }
   .mode-card.recommended { border-color: var(--blue); }
   .mode-badge {
@@ -662,82 +666,68 @@
     </a>
   </div>
   <div class="hero-meta">
-    <span> macOS 13+</span>
-    <span>Notarizzato Apple</span>
-    <span>Menu bar app</span>
+    <span><img src="apple-inc-64.png" style="width:16px;height:16px;vertical-align:middle;opacity:0.6;"> macOS 13+</span>
+    <span><img src="shield-64.png" style="width:16px;height:16px;vertical-align:middle;opacity:0.6;"> Verificato Apple</span>
+    <span><img src="toolbar-top-64.png" style="width:16px;height:16px;vertical-align:middle;opacity:0.6;"> Menu bar app</span>
   </div>
 </div>
 
 <!-- MOCKUP -->
 <div class="mockup-section">
-  <div class="mockup-wrapper">
-    <div class="mockup-bar">
-      <div class="dot dot-red"></div>
-      <div class="dot dot-yellow"></div>
-      <div class="dot dot-green"></div>
-      <div class="mockup-title">Scopino — Spotify</div>
+  <img 
+    src="finder-window-scopino.svg" 
+    alt="Scopino in azione" 
+    style="max-width: 980px; width: 100%; display: block; margin: 0 auto;"
+  >
+</div>
+
+<!-- COMPLETION BANNER -->
+<div style="display:flex; justify-content:center; padding: 0 24px 120px; margin-top: -190px;">
+  <div style="
+    max-width: 780px;
+    width: 100%;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(255,255,255,0.8);
+    border-radius: 20px;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 32px rgba(59,130,246,0.08);
+  ">
+    <!-- Left: check + testo -->
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div style="
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: #10B981;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      ">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12l5 5L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:16px; font-weight:700; color:#1C1C1E;">Pulizia completata!</div>
+        <div style="font-size:14px; color:#64748B; margin-top:2px;">Il tuo Mac è più leggero e veloce.</div>
+      </div>
     </div>
-    <div class="mockup-body">
-      <div class="mockup-app-header">
-        <div class="mockup-app-icon">🎵</div>
-        <div class="mockup-app-info">
-          <h3>Residui trovati per Spotify</h3>
-          <p>com.spotify.client · rimosso oggi alle 14:32</p>
-        </div>
-        <div class="mockup-stats">
-          <div class="mockup-stat">
-            <div class="val">847 MB</div>
-            <div class="lbl">liberabili</div>
-          </div>
-        </div>
-      </div>
-      <div class="residual-list">
-        <div class="residual-item">
-          <div class="residual-check">✓</div>
-          <div class="residual-icon">📁</div>
-          <div class="residual-info">
-            <div class="residual-name">com.spotify.client</div>
-            <div class="residual-path">~/Library/Application Support/Spotify</div>
-          </div>
-          <div class="residual-size">612 MB</div>
-          <div class="residual-badge">Cache</div>
-        </div>
-        <div class="residual-item">
-          <div class="residual-check">✓</div>
-          <div class="residual-icon">📄</div>
-          <div class="residual-info">
-            <div class="residual-name">com.spotify.client.plist</div>
-            <div class="residual-path">~/Library/Preferences</div>
-          </div>
-          <div class="residual-size">12 KB</div>
-          <div class="residual-badge">Preferenze</div>
-        </div>
-        <div class="residual-item">
-          <div class="residual-check">✓</div>
-          <div class="residual-icon">📦</div>
-          <div class="residual-info">
-            <div class="residual-name">com.spotify.client.savedState</div>
-            <div class="residual-path">~/Library/Saved Application State</div>
-          </div>
-          <div class="residual-size">235 MB</div>
-          <div class="residual-badge">Stato</div>
-        </div>
-      </div>
-      <div class="mockup-footer">
-        <div class="mockup-total">
-          Spazio liberabile <strong>847 MB</strong>
-        </div>
-        <div class="mockup-actions">
-          <button class="btn-ignore">Ignora</button>
-          <button class="btn-clean">🗑 Pulisci ora</button>
-        </div>
-      </div>
+    <!-- Right: GB liberati -->
+    <div style="text-align:right;">
+      <div style="font-size:28px; font-weight:800; color:#3B82F6; line-height:1;">7,38 <span style="font-size:18px;">GB</span></div>
+      <div style="font-size:13px; color:#64748B; margin-top:2px;">di spazio liberato</div>
     </div>
   </div>
 </div>
 
 <!-- STATS -->
-<div style="padding: 0 24px; max-width: 1100px; margin: 0 auto;">
+<!-- <div style="display:flex; justify-content:center; padding: 0 24px 80px; margin-top: -180px;"> -->
+<div style="display:flex; justify-content:center; padding: 0 24px 80px;">
   <div class="stats-banner">
     <div class="stat-item">
       <div class="stat-num">12<span>+</span></div>
@@ -913,7 +903,7 @@
       <div class="trust-icon" style="background:#F5F3FF;">✅</div>
       <div>
         <h4>Aggiornato</h4>
-        <p>Compatibile con le ultime versioni di macOS. Notarizzato Apple con Developer ID.</p>
+        <p>Compatibile con le ultime versioni di macOS. Verificato Apple con Developer ID.</p>
       </div>
     </div>
   </div>
@@ -936,8 +926,7 @@
   </a>
   <div class="footer-links">
     <a href="https://github.com/alemicieli09/Scopino" target="_blank">GitHub</a>
-    <a href="appcast/notes/1.0.html">Note di rilascio</a>
-    <a href="appcast/appcast.xml">Appcast</a>
+    <a href="../appcast/notes/1.0.html">Note di rilascio</a>
   </div>
   <div class="footer-copy">© 2026 Alessandro Micieli</div>
 </footer>
