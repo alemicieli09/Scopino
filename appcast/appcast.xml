@@ -7,6 +7,21 @@
         <language>it</language>
         
         <item>
+            <title>Scopino 1.2</title>
+            <pubDate>Thu, 08 May 2026 12:00:00 +0000</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>1.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <sparkle:releaseNotesLink>https://alemicieli09.github.io/Scopino/appcast/notes/1.2.html</sparkle:releaseNotesLink>
+            <enclosure
+                url="https://github.com/alemicieli09/Scopino/releases/download/v1.2/Scopino-1.2.dmg"
+                length="NUMERO_DAL_PASSO_4"
+                type="application/octet-stream"
+                sparkle:edSignature="FIRMA_DAL_PASSO_4"
+            />
+        </item>
+        
+        <item>
             <title>Scopino 1.1</title>
             <pubDate>Tue, 06 May 2026 12:00:00 +0000</pubDate>
             <sparkle:version>2</sparkle:version>
