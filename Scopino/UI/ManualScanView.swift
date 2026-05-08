@@ -233,6 +233,17 @@ struct ManualScanView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            
+            // Bottone Finder
+            Button {
+                showInFinder(session)
+            } label: {
+                Image(systemName: "folder.badge.magnifyingglass")
+            }
+            .buttonStyle(.bordered)
+            .tint(.blue)
+            .controlSize(.small)
+            .help("Mostra nel Finder")
 
             // Bottone pulisci
             Button("Pulisci") {
@@ -244,6 +255,26 @@ struct ManualScanView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
+    }
+    
+    private func showInFinder(_ session: CleanupSession) {
+        // Mostra il primo residuo nel Finder
+        // Se ce n'è più di uno apre la cartella padre
+        guard let firstPath = session.residuals.first?.path else { return }
+
+        let url = URL(fileURLWithPath: firstPath)
+
+        if session.residuals.count == 1 {
+            // File singolo — selezionalo nel Finder
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        } else {
+            // Più file — apri la cartella padre
+            let parent = url.deletingLastPathComponent()
+            NSWorkspace.shared.selectFile(
+                firstPath,
+                inFileViewerRootedAtPath: parent.path
+            )
+        }
     }
 
     // MARK: - Actions

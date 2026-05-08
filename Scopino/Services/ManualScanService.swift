@@ -12,17 +12,53 @@ import AppKit
 /// senza che Scopino fosse attivo al momento della rimozione.
 final class ManualScanService {
 
+    // MARK: - Blocklist
+
+    /// BundleID prefix che non vengono mai toccati.
+    private let blockedPrefixes: [String] = [
+        // Apple e sistema
+        "com.apple",
+        "com.apple.",
+        // Tool di sviluppo
+        "org.swift",
+        "com.llvm",
+        "org.llvm",
+        "org.gnu",
+        "com.jetbrains",
+        "org.chromium",
+        // Framework e runtime
+        "com.adobe.acc",
+        "com.adobe.adobeupdate",
+        "com.adobe.armdc",
+        // macOS internals
+        "com.smileonmymac",
+        "com.objective-see",
+        // Scopino stesso
+        "com.alemicieli",
+    ]
+
+    /// App che potrebbero non essere in /Applications ma sono attive.
+    private let knownActiveApps: Set<String> = [
+        "com.microsoft.rdc",
+        "com.microsoft.autoupdate2",
+        "com.microsoft.office",
+        "com.openai",
+        "net.whatsapp",
+        "com.canva",
+        "com.notion",
+        "com.figma",
+        "com.electron",
+    ]
+
     // MARK: - Scan
 
-    /// Scansiona il disco cercando residui di app non più presenti.
-    /// Ritorna un array di sessioni pronte per la pulizia.
     func scan() async -> [CleanupSession] {
         var sessions: [CleanupSession] = []
 
-        // 1. App attualmente installate in /Applications
+        // 1. App attualmente installate in /Applications (bundleID completi)
         let installedBundleIDs = installedApps()
 
-        // 2. Cerca residui in tutti i path noti
+        // 2. Cerca residui
         let candidates = await findOrphanedResiduals(
             excludingBundleIDs: installedBundleIDs
         )
@@ -30,9 +66,13 @@ final class ManualScanService {
         // 3. Raggruppa per app
         let grouped = groupByApp(candidates)
 
-        // 4. Crea sessioni
+        // 4. Crea sessioni — filtra gruppi con pochi elementi sospetti
         for (appInfo, residuals) in grouped {
             guard !residuals.isEmpty else { continue }
+
+            // Minimo 1 elemento con dimensione > 1KB per essere considerato
+            let significant = residuals.filter { $0.sizeBytes > 1024 }
+            guard !significant.isEmpty else { continue }
 
             let app = DetectedApp(
                 name: appInfo.name,
@@ -50,21 +90,42 @@ final class ManualScanService {
 
     // MARK: - Installed apps
 
+    /// Legge i bundleID di tutte le app in /Applications ricorsivamente.
     private func installedApps() -> Set<String> {
         var bundleIDs = Set<String>()
         let fm = FileManager.default
 
-        guard let items = try? fm.contentsOfDirectory(atPath: "/Applications") else {
-            return bundleIDs
-        }
+        // /Applications standard
+        addApps(in: "/Applications", to: &bundleIDs, fm: fm)
 
+        // /Applications/Utilities
+        addApps(in: "/Applications/Utilities", to: &bundleIDs, fm: fm)
+
+        // ~/Applications
+        let home = fm.homeDirectoryForCurrentUser.path
+        addApps(in: "\(home)/Applications", to: &bundleIDs, fm: fm)
+
+        // Aggiungi app note come attive
+        bundleIDs.formUnion(knownActiveApps)
+
+        return bundleIDs
+    }
+
+    private func addApps(
+        in directory: String,
+        to bundleIDs: inout Set<String>,
+        fm: FileManager
+    ) {
+        guard let items = try? fm.contentsOfDirectory(atPath: directory) else { return }
         for item in items where item.hasSuffix(".app") {
-            let plistPath = "/Applications/\(item)/Contents/Info.plist"
+            let plistPath = "\(directory)/\(item)/Contents/Info.plist"
             if let bid = NSDictionary(contentsOfFile: plistPath)?["CFBundleIdentifier"] as? String {
                 bundleIDs.insert(bid)
+                // Aggiungi anche prefisso (es. "com.spotify" da "com.spotify.client")
+                let prefix = bid.split(separator: ".").prefix(2).joined(separator: ".")
+                bundleIDs.insert(prefix)
             }
         }
-        return bundleIDs
     }
 
     // MARK: - Find orphaned residuals
@@ -82,18 +143,18 @@ final class ManualScanService {
         let fm = FileManager.default
 
         let scanPaths: [(path: String, category: ResidualCategory)] = [
-            ("\(home)/Library/Preferences",              .preferences),
-            ("\(home)/Library/Application Support",      .applicationSupport),
-            ("\(home)/Library/Caches",                   .cache),
-            ("\(home)/Library/Logs",                     .logs),
-            ("\(home)/Library/Containers",               .container),
-            ("\(home)/Library/Group Containers",         .groupContainer),
-            ("\(home)/Library/LaunchAgents",             .launchAgent),
-            ("\(home)/Library/Saved Application State",  .savedState),
-            ("/Library/LaunchAgents",                    .launchAgent),
-            ("/Library/LaunchDaemons",                   .launchDaemon),
-            ("/Library/Application Support",             .applicationSupport),
-            ("/Library/Preferences",                     .preferences),
+            ("\(home)/Library/Preferences",             .preferences),
+            ("\(home)/Library/Application Support",     .applicationSupport),
+            ("\(home)/Library/Caches",                  .cache),
+            ("\(home)/Library/Logs",                    .logs),
+            ("\(home)/Library/Containers",              .container),
+            ("\(home)/Library/Group Containers",        .groupContainer),
+            ("\(home)/Library/LaunchAgents",            .launchAgent),
+            ("\(home)/Library/Saved Application State", .savedState),
+            ("/Library/LaunchAgents",                   .launchAgent),
+            ("/Library/LaunchDaemons",                  .launchDaemon),
+            ("/Library/Application Support",            .applicationSupport),
+            ("/Library/Preferences",                    .preferences),
         ]
 
         var results: [ResidualItem] = []
@@ -102,17 +163,18 @@ final class ManualScanService {
             guard let items = try? fm.contentsOfDirectory(atPath: target.path) else { continue }
 
             for item in items {
-                // Estrai possibile bundleID dal nome file
                 guard let bundleID = extractBundleID(from: item) else { continue }
 
-                // Se l'app è ancora installata → salta
+                // Blocklist prefissi
+                if isBlocked(bundleID) { continue }
+
+                // App ancora installata
                 if installed.contains(bundleID) { continue }
 
-                // Ignora app Apple
-                if bundleID.hasPrefix("com.apple.") { continue }
-
-                // Ignora Scopino stesso
-                if bundleID.hasPrefix("com.alemicieli.Scopino") { continue }
+                // Controlla anche il prefisso (com.spotify da com.spotify.client)
+                let prefix = bundleID.split(separator: ".")
+                    .prefix(2).joined(separator: ".")
+                if installed.contains(prefix) { continue }
 
                 let fullPath = "\(target.path)/\(item)"
                 results.append(ResidualItem(
@@ -134,8 +196,15 @@ final class ManualScanService {
             }
             var sized: [ResidualItem] = []
             for await item in group { sized.append(item) }
+            // Filtra file troppo piccoli (< 1 byte) o non trovati
             return sized.filter { $0.sizeBytes > 0 }
         }
+    }
+
+    // MARK: - Blocked check
+
+    private func isBlocked(_ bundleID: String) -> Bool {
+        return blockedPrefixes.contains(where: { bundleID.hasPrefix($0) })
     }
 
     // MARK: - Group by app
@@ -150,13 +219,21 @@ final class ManualScanService {
                 from: (item.path as NSString).lastPathComponent
             ) else { continue }
 
-            let appName = bundleID.split(separator: ".").last
-                .map(String.init) ?? bundleID
-            let appInfo = AppInfo(
-                name: appName.capitalized,
-                bundleID: bundleID
-            )
+            // Usa solo prime 3 componenti come chiave gruppo
+            let components = bundleID.split(separator: ".")
+            let groupID = components.prefix(3).joined(separator: ".")
 
+            // Nome display: ultima componente significativa
+            let appName: String = {
+                if components.count >= 3 {
+                    return String(components[2]).capitalized
+                } else if components.count >= 2 {
+                    return String(components[1]).capitalized
+                }
+                return bundleID
+            }()
+
+            let appInfo = AppInfo(name: appName, bundleID: groupID)
             grouped[appInfo, default: []].append(item)
         }
 
@@ -165,22 +242,18 @@ final class ManualScanService {
 
     // MARK: - BundleID extraction
 
-    /// Estrae un bundleID da un nome file tipo "com.spotify.client.plist"
     private func extractBundleID(from filename: String) -> String? {
-        // Rimuovi estensione
         let name = (filename as NSString).deletingPathExtension
 
-        // Deve avere almeno due componenti separati da punto
         let parts = name.split(separator: ".")
         guard parts.count >= 2 else { return nil }
 
-        // Deve iniziare con un TLD noto
         let knownTLDs = ["com", "org", "net", "io", "app", "co", "it",
-                        "de", "fr", "eu", "me", "dev"]
+                         "de", "fr", "eu", "me", "dev", "uk", "us"]
         guard let first = parts.first,
               knownTLDs.contains(String(first).lowercased()) else { return nil }
 
-        // Ricostruisci bundleID (max 3 componenti per evitare falsi positivi)
+        // Max 3 componenti
         let components = parts.prefix(3)
         return components.joined(separator: ".")
     }
