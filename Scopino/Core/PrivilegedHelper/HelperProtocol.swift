@@ -7,18 +7,17 @@
 
 import Foundation
 
-/// Protocollo XPC condiviso tra app principale e helper.
+/// Protocollo XPC condiviso tra Scopino.app e ScopinoHelper.
 @objc protocol ScopinoHelperProtocol {
 
-    /// Elimina i file ai path specificati.
-    /// - Parameters:
-    ///   - paths: array di path assoluti da eliminare
-    ///   - reply: callback con array di errori (stringa vuota = successo)
+    /// Elimina i file ai path specificati con privilegi root.
     func removeItems(
         atPaths paths: [String],
-        withReply reply: @escaping ([String]) -> Void
+        withReply reply: @escaping (_ errors: [String]) -> Void
     )
 
     /// Verifica che l'helper sia raggiungibile.
-    func getVersion(withReply reply: @escaping (String) -> Void)
+    func getVersion(
+        withReply reply: @escaping (_ version: String) -> Void
+    )
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+   Info.plist
+   Scopino
+
+   Created by Alessandro Micieli on 04/05/2026.
+   Copyright (c) 2026 ___ORGANIZATIONNAME___. All rights reserved.
+-->
+<plist version="1.0">
+<dict>
+
+    <!-- Identità app -->
+    <key>CFBundleName</key>
+    <string>Scopino</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>Scopino</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <!-- Nasconde icona dal Dock — app menu bar only -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- Privacy — Full Disk Access -->
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>Scopino analizza i file residui lasciati dalle app disinstallate.</string>
+
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>Scopino analizza i file residui lasciati dalle app disinstallate.</string>
+
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>Scopino analizza i file residui lasciati dalle app disinstallate.</string>
+
+    <key>NSSystemAdministrationUsageDescription</key>
+    <string>Scopino rimuove i file di sistema residui lasciati dalle app disinstallate.</string>
+
+    <!-- Apple Events (richiesto per interazione con Finder) -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Scopino usa Apple Events per rilevare le app rimosse da /Applications.</string>
+
+    <!-- Supporto versioni macOS -->
+    <key>LSMinimumSystemVersion</key>
+    <string>26.0</string>
+
+    <!-- Nessuna finestra principale — menu bar only -->
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    
+    <!-- Sparkle -->
+    <key>SUFeedURL</key>
+    <string>https://alemicieli09.github.io/Scopino/appcast/appcast.xml</string>
+
+    <key>SUPublicEDKey</key>
+    <string>KftCQgOvjYgmH0a48hK8AEX0jSLYNxpF08hMwtNHEBM=</string>
+
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+
+    <key>SUShowReleaseNotes</key>
+    <true/>
+
+</dict>
+</plist>

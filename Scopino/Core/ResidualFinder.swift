@@ -149,7 +149,7 @@ final class ResidualFinder {
     }
 
     /// Metodo statico nonisolated — chiamabile da qualsiasi Task senza actor.
-    private static func sizeOf(path: String) async -> Int64 {
+    static func sizeOf(path: String) async -> Int64 {
         return await Task.detached(priority: .utility) {
             let fm = FileManager.default
             var isDir: ObjCBool = false

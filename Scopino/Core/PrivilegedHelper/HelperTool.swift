@@ -7,10 +7,7 @@
 
 import Foundation
 
-/// Processo helper privilegiato — gira come root via XPC.
 final class HelperTool: NSObject, ScopinoHelperProtocol {
-
-    // MARK: - ScopinoHelperProtocol
 
     func removeItems(
         atPaths paths: [String],
@@ -20,27 +17,23 @@ final class HelperTool: NSObject, ScopinoHelperProtocol {
         let fm = FileManager.default
 
         for path in paths {
-            // Protezione assoluta — non toccare mai path critici
             guard !isProtectedPath(path) else {
-                errors.append("\(path): path protetto")
+                errors.append("\(path)|protetto")
                 continue
             }
-
             guard fm.fileExists(atPath: path) else {
-                errors.append("") // già rimosso, ok
+                errors.append("")
                 continue
             }
-
             do {
                 try fm.removeItem(atPath: path)
-                errors.append("") // successo
-                print("[Helper] Rimosso: \(path)")
+                errors.append("")
+                NSLog("[ScopinoHelper] Rimosso: \(path)")
             } catch {
-                errors.append("\(path): \(error.localizedDescription)")
-                print("[Helper] Errore: \(path) — \(error)")
+                errors.append("\(path)|\(error.localizedDescription)")
+                NSLog("[ScopinoHelper] Errore: \(path) — \(error)")
             }
         }
-
         reply(errors)
     }
 
@@ -48,18 +41,9 @@ final class HelperTool: NSObject, ScopinoHelperProtocol {
         reply("1.0.0")
     }
 
-    // MARK: - Safety
-
     private func isProtectedPath(_ path: String) -> Bool {
-        let forbidden = [
-            "/System/",
-            "/usr/",
-            "/bin/",
-            "/sbin/",
-            "/private/etc/",
-            "/Users/",
-            "/var/",
-        ]
+        let forbidden = ["/System/", "/usr/", "/bin/", "/sbin/",
+                        "/private/etc/", "/Users/", "/var/", "/Applications/"]
         return forbidden.contains(where: { path.hasPrefix($0) })
     }
 }

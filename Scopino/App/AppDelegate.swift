@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
     private var historyWindow: NSWindow?
     private var onboardingWindow: NSWindow?
+    private var manualScanWindow: NSWindow?
 
     // MARK: - Lifecycle
 
@@ -50,6 +51,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PermissionChecker.requestFDAPermission()
         if PermissionChecker.needsOnboarding() {
             showOnboarding()
+        }
+        
+        // Observer per pulizia da scansione manuale
+        NotificationCenter.default.addObserver(
+            forName: .scopinoStartCleanup,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let session = notification.object as? CleanupSession else { return }
+            Task { await self?.startCleanupFromSession(session) }
         }
     }
 
@@ -75,6 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Cronologia", action: #selector(showHistory), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Scansione manuale", action: #selector(showManualScan), keyEquivalent: "s"))
         menu.addItem(NSMenuItem(title: "Impostazioni", action: #selector(showSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem(title: "Cerca aggiornamenti", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
@@ -189,6 +201,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
         }
     }
+    
+    @MainActor
+    private func startCleanupFromSession(_ session: CleanupSession) async {
+        activeSessions.append(session)
+        showProposalWindow(for: session)
+    }
 
     // MARK: - History Window
 
@@ -281,6 +299,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
 
         onboardingWindow = window
+    }
+    
+    // MARK: - Manual Scan
+    
+    @objc private func showManualScan() {
+        if let existing = manualScanWindow, existing.isVisible {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 520),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Scopino — Scansione manuale"
+        window.titlebarAppearsTransparent = true
+        window.center()
+        window.isReleasedWhenClosed = false
+
+        let rootView = ManualScanView {
+            window.close()
+        }
+
+        window.contentView = NSHostingView(rootView: rootView)
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        manualScanWindow = window
     }
 
     // MARK: - Helpers

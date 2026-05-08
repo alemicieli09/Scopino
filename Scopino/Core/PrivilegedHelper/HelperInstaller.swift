@@ -8,7 +8,7 @@
 import Foundation
 import ServiceManagement
 
-/// Installa e gestisce la connessione con l'XPC Helper.
+/// Gestisce installazione e comunicazione con ScopinoHelper.
 final class HelperInstaller {
 
     static let shared = HelperInstaller()
@@ -19,9 +19,10 @@ final class HelperInstaller {
 
     // MARK: - Install
 
-    /// Registra l'helper con SMAppService.
     func installIfNeeded() {
-        let service = SMAppService.daemon(plistName: "com.alemicieli.Scopino.helper.plist")
+        let service = SMAppService.daemon(
+            plistName: "com.alemicieli.Scopino.helper.plist"
+        )
 
         switch service.status {
         case .notRegistered, .notFound:
@@ -34,7 +35,7 @@ final class HelperInstaller {
         case .enabled:
             print("[HelperInstaller] Helper già attivo.")
         case .requiresApproval:
-            print("[HelperInstaller] Richiede approvazione utente.")
+            print("[HelperInstaller] Richiede approvazione.")
             SMAppService.openSystemSettingsLoginItems()
         @unknown default:
             break
@@ -43,12 +44,11 @@ final class HelperInstaller {
 
     // MARK: - Connection
 
-    func connect() -> NSXPCConnection {
-        if let existing = connection {
-            return existing
-        }
-
-        let conn = NSXPCConnection(serviceName: helperBundleID)
+    private func makeConnection() -> NSXPCConnection {
+        let conn = NSXPCConnection(
+            machServiceName: helperBundleID,
+            options: .privileged
+        )
         conn.remoteObjectInterface = NSXPCInterface(
             with: ScopinoHelperProtocol.self
         )
@@ -56,7 +56,17 @@ final class HelperInstaller {
             print("[HelperInstaller] Connessione invalidata.")
             self?.connection = nil
         }
+        conn.interruptionHandler = { [weak self] in
+            print("[HelperInstaller] Connessione interrotta.")
+            self?.connection = nil
+        }
         conn.resume()
+        return conn
+    }
+
+    private func getConnection() -> NSXPCConnection {
+        if let existing = connection { return existing }
+        let conn = makeConnection()
         connection = conn
         return conn
     }
@@ -66,15 +76,16 @@ final class HelperInstaller {
         connection = nil
     }
 
-    // MARK: - Remove items via Helper
+    // MARK: - Remove items
 
     func removeItems(atPaths paths: [String]) async -> [String] {
         await withCheckedContinuation { continuation in
-            let conn = connect()
+            let conn = getConnection()
 
             guard let helper = conn.remoteObjectProxyWithErrorHandler({ error in
                 print("[HelperInstaller] Proxy error: \(error)")
-                continuation.resume(returning: Array(repeating: error.localizedDescription, count: paths.count))
+                let errors = Array(repeating: error.localizedDescription, count: paths.count)
+                continuation.resume(returning: errors)
             }) as? ScopinoHelperProtocol else {
                 continuation.resume(returning: ["Impossibile connettersi all'helper"])
                 return
@@ -82,6 +93,23 @@ final class HelperInstaller {
 
             helper.removeItems(atPaths: paths) { errors in
                 continuation.resume(returning: errors)
+            }
+        }
+    }
+
+    // MARK: - Ping
+
+    func ping() async -> Bool {
+        await withCheckedContinuation { continuation in
+            let conn = getConnection()
+            guard let helper = conn.remoteObjectProxyWithErrorHandler({ _ in
+                continuation.resume(returning: false)
+            }) as? ScopinoHelperProtocol else {
+                continuation.resume(returning: false)
+                return
+            }
+            helper.getVersion { _ in
+                continuation.resume(returning: true)
             }
         }
     }
