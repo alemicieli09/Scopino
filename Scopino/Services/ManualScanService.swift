@@ -14,22 +14,20 @@ final class ManualScanService {
 
     // MARK: - Blocklist
 
-    /// BundleID prefix che non vengono mai toccati.
     private let blockedPrefixes: [String] = [
         // Apple e sistema
-        "com.apple",
-        "com.apple.",
+        "com.apple", "com.apple.",
         // Tool di sviluppo
-        "org.swift",
-        "com.llvm",
-        "org.llvm",
-        "org.gnu",
-        "com.jetbrains",
-        "org.chromium",
+        "org.swift", "com.llvm", "org.llvm", "org.gnu",
+        "com.jetbrains", "org.chromium",
         // Framework e runtime
-        "com.adobe.acc",
-        "com.adobe.adobeupdate",
-        "com.adobe.armdc",
+        "com.adobe.acc", "com.adobe.adobeupdate", "com.adobe.armdc",
+        // SDK e framework usati da app attive
+        "com.crashlytics",
+        "com.bugsnag",
+        "io.branch",
+        "org.freedesktop",
+        "net.java",
         // macOS internals
         "com.smileonmymac",
         "com.objective-see",
@@ -37,40 +35,28 @@ final class ManualScanService {
         "com.alemicieli",
     ]
 
-    /// App che potrebbero non essere in /Applications ma sono attive.
     private let knownActiveApps: Set<String> = [
-        "com.microsoft.rdc",
-        "com.microsoft.autoupdate2",
-        "com.microsoft.office",
-        "com.openai",
-        "net.whatsapp",
-        "com.canva",
-        "com.notion",
-        "com.figma",
-        "com.electron",
+        "com.microsoft.rdc", "com.microsoft.autoupdate2", "com.microsoft.office",
+        "com.openai", "net.whatsapp", "com.canva", "com.notion",
+        "com.figma", "com.electron",
+        // Adobe — file condivisi tra app
+        "com.adobe",
+        // Browser
+        "com.brave.Browser",
+        // Virtualizzazione
+        "com.utmapp",
     ]
 
     // MARK: - Scan
 
     func scan() async -> [CleanupSession] {
         var sessions: [CleanupSession] = []
-
-        // 1. App attualmente installate in /Applications (bundleID completi)
         let installedBundleIDs = installedApps()
-
-        // 2. Cerca residui
-        let candidates = await findOrphanedResiduals(
-            excludingBundleIDs: installedBundleIDs
-        )
-
-        // 3. Raggruppa per app
+        let candidates = await findOrphanedResiduals(excludingBundleIDs: installedBundleIDs)
         let grouped = groupByApp(candidates)
 
-        // 4. Crea sessioni — filtra gruppi con pochi elementi sospetti
         for (appInfo, residuals) in grouped {
             guard !residuals.isEmpty else { continue }
-
-            // Minimo 1 elemento con dimensione > 1KB per essere considerato
             let significant = residuals.filter { $0.sizeBytes > 1024 }
             guard !significant.isEmpty else { continue }
 
@@ -90,24 +76,14 @@ final class ManualScanService {
 
     // MARK: - Installed apps
 
-    /// Legge i bundleID di tutte le app in /Applications ricorsivamente.
     private func installedApps() -> Set<String> {
         var bundleIDs = Set<String>()
         let fm = FileManager.default
-
-        // /Applications standard
         addApps(in: "/Applications", to: &bundleIDs, fm: fm)
-
-        // /Applications/Utilities
         addApps(in: "/Applications/Utilities", to: &bundleIDs, fm: fm)
-
-        // ~/Applications
         let home = fm.homeDirectoryForCurrentUser.path
         addApps(in: "\(home)/Applications", to: &bundleIDs, fm: fm)
-
-        // Aggiungi app note come attive
         bundleIDs.formUnion(knownActiveApps)
-
         return bundleIDs
     }
 
@@ -121,7 +97,6 @@ final class ManualScanService {
             let plistPath = "\(directory)/\(item)/Contents/Info.plist"
             if let bid = NSDictionary(contentsOfFile: plistPath)?["CFBundleIdentifier"] as? String {
                 bundleIDs.insert(bid)
-                // Aggiungi anche prefisso (es. "com.spotify" da "com.spotify.client")
                 let prefix = bid.split(separator: ".").prefix(2).joined(separator: ".")
                 bundleIDs.insert(prefix)
             }
@@ -138,7 +113,6 @@ final class ManualScanService {
     private func findOrphanedResiduals(
         excludingBundleIDs installed: Set<String>
     ) async -> [ResidualItem] {
-
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let fm = FileManager.default
 
@@ -164,28 +138,16 @@ final class ManualScanService {
 
             for item in items {
                 guard let bundleID = extractBundleID(from: item) else { continue }
-
-                // Blocklist prefissi
                 if isBlocked(bundleID) { continue }
-
-                // App ancora installata
                 if installed.contains(bundleID) { continue }
-
-                // Controlla anche il prefisso (com.spotify da com.spotify.client)
-                let prefix = bundleID.split(separator: ".")
-                    .prefix(2).joined(separator: ".")
+                let prefix = bundleID.split(separator: ".").prefix(2).joined(separator: ".")
                 if installed.contains(prefix) { continue }
 
                 let fullPath = "\(target.path)/\(item)"
-                results.append(ResidualItem(
-                    path: fullPath,
-                    category: target.category,
-                    sizeBytes: 0
-                ))
+                results.append(ResidualItem(path: fullPath, category: target.category, sizeBytes: 0))
             }
         }
 
-        // Calcola dimensioni in parallelo
         return await withTaskGroup(of: ResidualItem.self) { group in
             for item in results {
                 group.addTask {
@@ -196,7 +158,6 @@ final class ManualScanService {
             }
             var sized: [ResidualItem] = []
             for await item in group { sized.append(item) }
-            // Filtra file troppo piccoli (< 1 byte) o non trovati
             return sized.filter { $0.sizeBytes > 0 }
         }
     }
@@ -204,7 +165,52 @@ final class ManualScanService {
     // MARK: - Blocked check
 
     private func isBlocked(_ bundleID: String) -> Bool {
-        return blockedPrefixes.contains(where: { bundleID.hasPrefix($0) })
+        blockedPrefixes.contains(where: { bundleID.hasPrefix($0) })
+    }
+
+    // MARK: - Display name resolution
+
+    /// Cerca il nome human-readable dell'app in questo ordine:
+    /// 1. NSWorkspace (app ancora in cache di sistema)
+    /// 2. Cartella Application Support (spesso usa nome app)
+    /// 3. Fallback al bundleID originale
+    private func resolvedDisplayName(
+        for bundleID: String,
+        originalFilename: String
+    ) -> String {
+        // 1. NSWorkspace — se l'app è ancora in cache
+        if let url = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: bundleID
+        ) {
+            let name = url.deletingPathExtension().lastPathComponent
+            if !name.isEmpty && !name.contains(".") {
+                return name
+            }
+        }
+
+        // 2. Application Support — cerca cartella con nome simile
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let appSupportPath = "\(home)/Library/Application Support"
+        let lastComponent = bundleID.split(separator: ".").last.map(String.init) ?? ""
+
+        if let items = try? FileManager.default.contentsOfDirectory(atPath: appSupportPath) {
+            // Match esatto case-insensitive
+            for item in items {
+                if item.lowercased() == lastComponent.lowercased() {
+                    return item
+                }
+            }
+            // Match parziale — il nome contiene l'ultima componente
+            for item in items {
+                if item.lowercased().contains(lastComponent.lowercased())
+                    && !item.contains(".") {
+                    return item
+                }
+            }
+        }
+
+        // 3. Fallback — usa il filename originale senza estensione
+        return (originalFilename as NSString).deletingPathExtension
     }
 
     // MARK: - Group by app
@@ -215,25 +221,19 @@ final class ManualScanService {
         var grouped: [AppInfo: [ResidualItem]] = [:]
 
         for item in items {
-            guard let bundleID = extractBundleID(
-                from: (item.path as NSString).lastPathComponent
-            ) else { continue }
+            let filename = (item.path as NSString).lastPathComponent
+            guard let bundleID = extractBundleID(from: filename) else { continue }
 
-            // Usa solo prime 3 componenti come chiave gruppo
-            let components = bundleID.split(separator: ".")
-            let groupID = components.prefix(3).joined(separator: ".")
+            let groupID = bundleID.split(separator: ".")
+                .prefix(3).joined(separator: ".")
 
-            // Nome display: ultima componente significativa
-            let appName: String = {
-                if components.count >= 3 {
-                    return String(components[2]).capitalized
-                } else if components.count >= 2 {
-                    return String(components[1]).capitalized
-                }
-                return bundleID
-            }()
+            // Risolvi nome human-readable
+            let name = resolvedDisplayName(
+                for: groupID,
+                originalFilename: filename
+            )
 
-            let appInfo = AppInfo(name: appName, bundleID: groupID)
+            let appInfo = AppInfo(name: name, bundleID: groupID)
             grouped[appInfo, default: []].append(item)
         }
 
@@ -244,7 +244,6 @@ final class ManualScanService {
 
     private func extractBundleID(from filename: String) -> String? {
         let name = (filename as NSString).deletingPathExtension
-
         let parts = name.split(separator: ".")
         guard parts.count >= 2 else { return nil }
 
@@ -253,8 +252,6 @@ final class ManualScanService {
         guard let first = parts.first,
               knownTLDs.contains(String(first).lowercased()) else { return nil }
 
-        // Max 3 componenti
-        let components = parts.prefix(3)
-        return components.joined(separator: ".")
+        return parts.prefix(3).joined(separator: ".")
     }
 }

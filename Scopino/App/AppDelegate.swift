@@ -85,6 +85,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
+
+        // Header app — non cliccabile
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let headerItem = NSMenuItem(title: "Scopino (v\(version))", action: nil, keyEquivalent: "")
+        headerItem.isEnabled = false
+        headerItem.attributedTitle = NSAttributedString(
+            string: "Scopino (v\(version))",
+            attributes: [
+                .font: NSFont.boldSystemFont(ofSize: 13),
+                .foregroundColor: NSColor.labelColor
+            ]
+        )
+        menu.addItem(headerItem)
+        menu.addItem(NSMenuItem.separator())
+
         menu.addItem(NSMenuItem(title: "Cronologia", action: #selector(showHistory), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Scansione manuale", action: #selector(showManualScan), keyEquivalent: "s"))
         menu.addItem(NSMenuItem(title: "Impostazioni", action: #selector(showSettings), keyEquivalent: ","))

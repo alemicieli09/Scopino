@@ -19,15 +19,12 @@ struct ManualScanView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-
-            // Toolbar
             toolbar
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
 
             Divider()
 
-            // Content
             if isScanning {
                 scanningView
             } else if scanDone && sessions.isEmpty {
@@ -52,9 +49,7 @@ struct ManualScanView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
             Spacer()
-
             Button {
                 onClose()
             } label: {
@@ -71,7 +66,6 @@ struct ManualScanView: View {
     private var startView: some View {
         VStack(spacing: 24) {
             Spacer()
-
             ZStack {
                 Circle()
                     .fill(Color.blue.opacity(0.08))
@@ -81,18 +75,15 @@ struct ManualScanView: View {
                     .frame(width: 48, height: 48)
                     .foregroundStyle(.blue)
             }
-
             VStack(spacing: 8) {
                 Text("Cerca residui sul disco")
                     .font(.title3)
                     .fontWeight(.semibold)
-
                 Text("Scopino analizzerà la libreria di sistema cercando file\ndi app che non sono più installate.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-
             Button {
                 startScan()
             } label: {
@@ -105,7 +96,6 @@ struct ManualScanView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.blue)
-
             Spacer()
         }
         .padding(40)
@@ -116,19 +106,15 @@ struct ManualScanView: View {
     private var scanningView: some View {
         VStack(spacing: 24) {
             Spacer()
-
             ProgressView()
                 .scaleEffect(1.4)
                 .tint(.blue)
-
             Text("Scansione in corso…")
                 .font(.title3)
                 .fontWeight(.semibold)
-
             Text("Analisi dei path di sistema")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-
             Spacer()
         }
     }
@@ -138,22 +124,17 @@ struct ManualScanView: View {
     private var emptyView: some View {
         VStack(spacing: 16) {
             Spacer()
-
             Image(systemName: "checkmark.seal.fill")
                 .resizable()
                 .frame(width: 52, height: 52)
                 .foregroundStyle(.green)
-
             Text("Nessun residuo trovato")
                 .font(.title3)
                 .fontWeight(.semibold)
-
             Text("Il tuo Mac è pulito — nessun file orfano rilevato.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-
             Spacer()
-
             Button("Chiudi") { onClose() }
                 .buttonStyle(.borderedProminent)
                 .tint(.accentColor)
@@ -165,7 +146,6 @@ struct ManualScanView: View {
 
     private var resultsList: some View {
         VStack(spacing: 0) {
-            // Header risultati
             HStack {
                 Text("\(sessions.count) app con residui · \(totalSizeDisplay)")
                     .font(.subheadline)
@@ -196,23 +176,39 @@ struct ManualScanView: View {
         }
     }
 
+    // MARK: - Session row
+
     private func sessionRow(_ session: CleanupSession) -> some View {
         HStack(spacing: 14) {
-            // Icona
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.controlBackgroundColor))
-                    .frame(width: 40, height: 40)
-                Image(systemName: "app.dashed")
-                    .foregroundStyle(.secondary)
-            }
 
-            // Info
+            // Icona Finder — al posto del quadratino
+            Button {
+                showInFinder(session)
+            } label: {
+                Group {
+                    if let img = NSImage(named: "FinderIcon") {
+                        Image(nsImage: img)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+                    } else {
+                        // Fallback SF Symbol se immagine non trovata
+                        Image(systemName: "folder.badge.magnifyingglass")
+                            .font(.title2)
+                            .foregroundStyle(.blue)
+                            .frame(width: 32, height: 32)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .help("Mostra nel Finder")
+            .cursor(.pointingHand)
+
+            // Info app
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.app.displayName)
                     .font(.subheadline)
                     .fontWeight(.semibold)
-
                 if let bid = session.app.bundleID {
                     Text(bid)
                         .font(.caption)
@@ -233,19 +229,8 @@ struct ManualScanView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
-            // Bottone Finder
-            Button {
-                showInFinder(session)
-            } label: {
-                Image(systemName: "folder.badge.magnifyingglass")
-            }
-            .buttonStyle(.bordered)
-            .tint(.blue)
-            .controlSize(.small)
-            .help("Mostra nel Finder")
 
-            // Bottone pulisci
+            // Bottone Pulisci
             Button("Pulisci") {
                 cleanSession(session)
             }
@@ -256,19 +241,16 @@ struct ManualScanView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
     }
-    
-    private func showInFinder(_ session: CleanupSession) {
-        // Mostra il primo residuo nel Finder
-        // Se ce n'è più di uno apre la cartella padre
-        guard let firstPath = session.residuals.first?.path else { return }
 
+    // MARK: - Finder
+
+    private func showInFinder(_ session: CleanupSession) {
+        guard let firstPath = session.residuals.first?.path else { return }
         let url = URL(fileURLWithPath: firstPath)
 
         if session.residuals.count == 1 {
-            // File singolo — selezionalo nel Finder
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } else {
-            // Più file — apri la cartella padre
             let parent = url.deletingLastPathComponent()
             NSWorkspace.shared.selectFile(
                 firstPath,
@@ -283,7 +265,6 @@ struct ManualScanView: View {
         isScanning = true
         scanDone = false
         sessions = []
-
         Task {
             let found = await service.scan()
             await MainActor.run {
@@ -295,8 +276,6 @@ struct ManualScanView: View {
     }
 
     private func cleanSession(_ session: CleanupSession) {
-        // Passa la sessione al flow normale di pulizia
-        // tramite NotificationCenter
         NotificationCenter.default.post(
             name: .scopinoStartCleanup,
             object: session
@@ -321,6 +300,16 @@ struct ManualScanView: View {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return formatter.string(fromByteCount: total)
+    }
+}
+
+// MARK: - Cursor modifier
+
+extension View {
+    func cursor(_ cursor: NSCursor) -> some View {
+        self.onHover { inside in
+            if inside { cursor.push() } else { NSCursor.pop() }
+        }
     }
 }
 
