@@ -123,23 +123,23 @@ Seleziona il target **Scopino**, scegli il tuo team di sviluppo in Signing & Cap
 │                     └──────────┬───────────────┘    │
 │                                │                    │
 │                     ┌──────────▼───────────────┐    │
-│                     │    ResidualFinder         │    │
-│                     │  • path standard          │    │
-│                     │  • KnownResidualsDB       │    │
+│                     │    ResidualFinder        │    │
+│                     │  • path standard         │    │
+│                     │  • KnownResidualsDB      │    │
 │                     └──────────┬───────────────┘    │
-│                                │                     │
-│                     ┌──────────▼─────────────── ┐    │
-│                     │   CleanupSession          │    │
-│                     │   (ObservableObject)      │    │
-│                     └──────────┬─────────────── ┘    │
+│                                │                    │
+│                     ┌──────────▼───────────────┐    │
+│                     │   CleanupSession         │    │
+│                     │   (ObservableObject)     │    │
+│                     └──────────┬───────────────┘    │
 │                                │                     │
 │            ┌───────────────────┼──────────────┐     │
 │            │                   │              │     │
-│   ┌────────▼──────┐  ┌────────▼──────┐  ┌───▼───┐  │
+│   ┌────────▼──────┐  ┌────────▼──────┐  ┌───▼────┐  │
 │   │ResidualCleaner│  │CleanupProposal│  │Session│   │
 │   │  (Trash /     │  │    Window     │  │ Store │   │
 │   │  XPC Helper)  │  │    (SwiftUI)  │  │ (JSON)│   │
-│   └───────────────┘  └───────────────┘  └───────┘  │
+│   └───────────────┘  └───────────────┘  └────────┘  │
 └─────────────────────────────────────────────────────┘
          │ XPC
 ┌────────▼────────────┐
