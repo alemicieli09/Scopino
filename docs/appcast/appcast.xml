@@ -14,7 +14,7 @@
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
             <sparkle:releaseNotesLink>https://alemicieli09.github.io/Scopino/appcast/notes/1.4.html</sparkle:releaseNotesLink>
             <enclosure
-                url="https://github.com/alemicieli09/Scopino/releases/download/v1.4/Scopino-1.4.dmg"
+                url="https://github.com/alemicieli09/Scopino/releases/download/1.4/Scopino-1.4.dmg"
                 length="7688515"
                 type="application/octet-stream"
                 sparkle:edSignature="cQvfmDvJPsCYvaq+vsaTIuTFXb86m0coefyCkSzmAyz1uieKd728Yb7+3Mg4jntofMkJS9TmlRZwGlz3nbjABg=="
