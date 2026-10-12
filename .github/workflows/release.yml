@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
 
@@ -182,7 +182,7 @@ jobs:
             exit 1
           }
 
-      - name: Create DMG
+      - name: Create and sign DMG
         run: |
           staging="$RUNNER_TEMP/dmg-root"
           mkdir -p "$staging"
@@ -194,6 +194,13 @@ jobs:
             -ov \
             -format UDZO \
             "$DMG_PATH"
+
+          codesign \
+            --force \
+            --sign 'Developer ID Application' \
+            --timestamp \
+            "$DMG_PATH"
+          codesign --verify --verbose=2 "$DMG_PATH"
 
       - name: Notarize and staple DMG
         env:
