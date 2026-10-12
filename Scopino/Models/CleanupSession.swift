@@ -33,10 +33,25 @@ final class CleanupSession: ObservableObject, Identifiable {
         residuals.filter { $0.isSelected }.reduce(0) { $0 + $1.sizeBytes }
     }
 
+    /// Dimensione complessiva rilevata, indipendente dalla selezione utente.
+    var detectedSizeBytes: Int64 {
+        residuals.reduce(0) { $0 + $1.sizeBytes }
+    }
+
+    var hasSelectedItems: Bool {
+        residuals.contains(where: \.isSelected)
+    }
+
     var displayTotalSize: String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return formatter.string(fromByteCount: totalSizeBytes)
+    }
+
+    var displayDetectedSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: detectedSizeBytes)
     }
 
     var successCount: Int {

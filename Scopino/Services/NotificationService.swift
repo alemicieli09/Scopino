@@ -28,6 +28,14 @@ final class NotificationService {
         }
     }
 
+    /// Mostra il prompt di sistema una sola volta, quando lo stato è ancora
+    /// indeterminato. Gli stati negato e autorizzato vengono rispettati.
+    func requestAuthorizationIfNeeded() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard settings.authorizationStatus == .notDetermined else { return }
+        await requestAuthorization()
+    }
+
     /// Verifica se le notifiche sono autorizzate.
     func isAuthorized() async -> Bool {
         let settings = await UNUserNotificationCenter.current().notificationSettings()

@@ -4,10 +4,16 @@
 <dict>
     <key>Label</key>
     <string>com.alemicieli.Scopino.helper</string>
+    <key>BundleProgram</key>
+    <string>Contents/Library/HelperTools/ScopinoHelper</string>
     <key>MachServices</key>
     <dict>
         <key>com.alemicieli.Scopino.helper</key>
         <true/>
     </dict>
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+        <string>com.alemicieli.Scopino</string>
+    </array>
 </dict>
 </plist>

@@ -6,13 +6,13 @@
 //
 
 import SwiftUI
-import ServiceManagement
 import Sparkle
 
 struct SettingsView: View {
 
     @State private var hasFullDiskAccess = PermissionChecker.hasFDAPermission()
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var launchAtLogin = LoginItemManager.shared.isEnabled
+    @State private var launchAtLoginError: String?
     @State private var notificationsEnabled = false
     @State private var automaticUpdates = true
     @State private var checkTimer: Timer?
@@ -102,7 +102,9 @@ struct SettingsView: View {
                     Text("Avvia al login")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                    Text("Scopino si avvia automaticamente all'accesso.")
+                    Text(LoginItemManager.shared.canRegisterCurrentCopy
+                         ? "Scopino si avvia automaticamente all'accesso."
+                         : "Installa Scopino in Applicazioni per usare questa funzione.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -116,6 +118,7 @@ struct SettingsView: View {
                     .onChange(of: launchAtLogin) { _, newValue in
                         toggleLaunchAtLogin(newValue)
                     }
+                    .disabled(!LoginItemManager.shared.canRegisterCurrentCopy && !launchAtLogin)
             }
             .padding(14)
             .background(
@@ -123,18 +126,26 @@ struct SettingsView: View {
                     .fill(Color(.controlBackgroundColor))
             )
         }
+        .alert(
+            "Impossibile modificare l’avvio al login",
+            isPresented: Binding(
+                get: { launchAtLoginError != nil },
+                set: { if !$0 { launchAtLoginError = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(launchAtLoginError ?? "Errore sconosciuto")
+        }
     }
 
     private func toggleLaunchAtLogin(_ enable: Bool) {
         do {
-            if enable {
-                try SMAppService.mainApp.register()
-            } else {
-                try SMAppService.mainApp.unregister()
-            }
+            try LoginItemManager.shared.setEnabled(enable)
         } catch {
             print("[LaunchAtLogin] Errore: \(error)")
-            launchAtLogin = SMAppService.mainApp.status == .enabled
+            launchAtLogin = LoginItemManager.shared.isEnabled
+            launchAtLoginError = error.localizedDescription
         }
     }
 

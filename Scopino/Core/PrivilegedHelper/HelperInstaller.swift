@@ -17,29 +17,35 @@ final class HelperInstaller {
     private let helperBundleID = "com.alemicieli.Scopino.helper"
     private var connection: NSXPCConnection?
 
-    // MARK: - Install
+    private var service: SMAppService {
+        SMAppService.daemon(plistName: "com.alemicieli.Scopino.helper.plist")
+    }
 
-    func installIfNeeded() {
-        let service = SMAppService.daemon(
-            plistName: "com.alemicieli.Scopino.helper.plist"
-        )
+    // MARK: - Registration
+
+    /// Registra il daemon solo in risposta a un'azione dell'utente che richiede
+    /// la rimozione di elementi privilegiati. Non apre mai Impostazioni.
+    @discardableResult
+    func registerWhenNeeded() throws -> SMAppService.Status {
+        guard Bundle.main.bundleURL.standardizedFileURL.path.hasPrefix("/Applications/") else {
+            throw HelperInstallerError.appMustBeInstalled
+        }
 
         switch service.status {
         case .notRegistered, .notFound:
-            do {
-                try service.register()
-                print("[HelperInstaller] Helper registrato.")
-            } catch {
-                print("[HelperInstaller] Errore registrazione: \(error)")
-            }
+            try service.register()
         case .enabled:
-            print("[HelperInstaller] Helper già attivo.")
+            return .enabled
         case .requiresApproval:
-            print("[HelperInstaller] Richiede approvazione.")
-            SMAppService.openSystemSettingsLoginItems()
+            return .requiresApproval
         @unknown default:
-            break
+            return service.status
         }
+        return service.status
+    }
+
+    func openApprovalSettings() {
+        SMAppService.openSystemSettingsLoginItems()
     }
 
     // MARK: - Connection
@@ -79,7 +85,14 @@ final class HelperInstaller {
     // MARK: - Remove items
 
     func removeItems(atPaths paths: [String]) async -> [String] {
-        await withCheckedContinuation { continuation in
+        guard service.status == .enabled else {
+            return Array(
+                repeating: "Helper non autorizzato nelle Impostazioni di Sistema",
+                count: paths.count
+            )
+        }
+
+        return await withCheckedContinuation { continuation in
             let conn = getConnection()
 
             guard let helper = conn.remoteObjectProxyWithErrorHandler({ error in
@@ -112,5 +125,13 @@ final class HelperInstaller {
                 continuation.resume(returning: true)
             }
         }
+    }
+}
+
+enum HelperInstallerError: LocalizedError {
+    case appMustBeInstalled
+
+    var errorDescription: String? {
+        "Per autorizzare la pulizia dei file di sistema, installa prima Scopino nella cartella Applicazioni."
     }
 }

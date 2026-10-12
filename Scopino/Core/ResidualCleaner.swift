@@ -26,6 +26,8 @@ final class ResidualCleaner {
     /// Pulisce tutti gli item selezionati. Ritorna il riepilogo.
     func clean(items: [ResidualItem]) async -> [CleanupResult] {
         let selected = items.filter { $0.isSelected }
+        guard !selected.isEmpty else { return [] }
+
         var results: [CleanupResult] = []
 
         for (index, item) in selected.enumerated() {
@@ -39,7 +41,9 @@ final class ResidualCleaner {
 
         // Notifica completamento
         await MainActor.run {
-            onProgress?(selected.count, selected.count, selected.last ?? selected[0])
+            if let last = selected.last {
+                onProgress?(selected.count, selected.count, last)
+            }
         }
 
         return results

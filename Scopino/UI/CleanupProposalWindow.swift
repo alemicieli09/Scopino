@@ -94,7 +94,7 @@ struct CleanupProposalWindow: View {
                 .fontWeight(.semibold)
 
             // Sottotitolo
-            Text("\(session.residuals.count) elementi · \(session.displayTotalSize)")
+            Text("\(session.residuals.count) elementi rilevati · \(session.displayDetectedSize)")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -148,6 +148,7 @@ struct CleanupProposalWindow: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
                 .keyboardShortcut(.return)
+                .disabled(!session.hasSelectedItems)
             }
         }
     }

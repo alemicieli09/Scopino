@@ -33,3 +33,8 @@ build/
 *.p12
 *.mobileprovision
 *.certSigningRequest
+*.pem
+*.key
+*.private
+.env
+.env.*

@@ -1,0 +1,252 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Versione pubblica, per esempio 1.5
+        required: true
+        type: string
+      build:
+        description: Numero build interno, per esempio 6
+        required: true
+        type: string
+      release_mode:
+        description: Crea una bozza oppure pubblica subito
+        required: true
+        default: draft
+        type: choice
+        options:
+          - draft
+          - publish
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, sign and notarize
+    runs-on: macos-26
+    timeout-minutes: 60
+    environment: release
+    env:
+      ARCHIVE_PATH: ${{ runner.temp }}/Scopino.xcarchive
+      EXPORT_PATH: ${{ runner.temp }}/export
+      DERIVED_DATA: ${{ runner.temp }}/DerivedData
+      DMG_PATH: ${{ runner.temp }}/Scopino-${{ inputs.version }}.dmg
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Validate inputs and project version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_BUILD: ${{ inputs.build }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || {
+            echo "Formato versione non valido: $RELEASE_VERSION"
+            exit 1
+          }
+          [[ "$RELEASE_BUILD" =~ ^[1-9][0-9]*$ ]] || {
+            echo "Numero build non valido: $RELEASE_BUILD"
+            exit 1
+          }
+
+          settings="$(xcodebuild -project Scopino.xcodeproj -scheme Scopino -configuration Release -showBuildSettings)"
+          project_version="$(awk '/MARKETING_VERSION =/{print $3; exit}' <<< "$settings")"
+          project_build="$(awk '/CURRENT_PROJECT_VERSION =/{print $3; exit}' <<< "$settings")"
+
+          [[ "$project_version" == "$RELEASE_VERSION" ]] || {
+            echo "La versione del progetto è $project_version, non $RELEASE_VERSION"
+            exit 1
+          }
+          [[ "$project_build" == "$RELEASE_BUILD" ]] || {
+            echo "La build del progetto è $project_build, non $RELEASE_BUILD"
+            exit 1
+          }
+
+          if gh release view "v$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "La release v$RELEASE_VERSION esiste già"
+            exit 1
+          fi
+      - name: Resolve packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project Scopino.xcodeproj \
+            -scheme Scopino \
+            -clonedSourcePackagesDirPath "$DERIVED_DATA/SourcePackages"
+
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Scopino.xcodeproj \
+            -scheme Scopino \
+            -configuration Debug \
+            -destination 'platform=macOS,arch=arm64' \
+            -clonedSourcePackagesDirPath "$DERIVED_DATA/SourcePackages" \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Check release secrets
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.RELEASE_KEYCHAIN_PASSWORD }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_APP_SPECIFIC_PASSWORD }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          for name in CERTIFICATE_BASE64 CERTIFICATE_PASSWORD KEYCHAIN_PASSWORD \
+            NOTARY_APPLE_ID NOTARY_PASSWORD SPARKLE_PRIVATE_KEY APPLE_TEAM_ID; do
+            [[ -n "${!name:-}" ]] || {
+              echo "Segreto mancante: $name"
+              exit 1
+            }
+          done
+
+      - name: Import Developer ID certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.RELEASE_KEYCHAIN_PASSWORD }}
+        run: |
+          certificate_path="$RUNNER_TEMP/developer-id.p12"
+          keychain_path="$RUNNER_TEMP/scopino-release.keychain-db"
+
+          printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$certificate_path"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security import "$certificate_path" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$keychain_path"
+          security list-keychains -d user -s "$keychain_path"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$keychain_path"
+
+      - name: Archive and export signed app
+        run: |
+          xcodebuild archive \
+            -project Scopino.xcodeproj \
+            -scheme Scopino \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -clonedSourcePackagesDirPath "$DERIVED_DATA/SourcePackages" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY='Developer ID Application' \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            ARCHS='arm64 x86_64' \
+            ONLY_ACTIVE_ARCH=NO
+
+          export_options="$RUNNER_TEMP/ExportOptions.plist"
+          plutil -create xml1 "$export_options"
+          plutil -insert method -string developer-id "$export_options"
+          plutil -insert signingStyle -string manual "$export_options"
+          plutil -insert signingCertificate -string 'Developer ID Application' "$export_options"
+          plutil -insert teamID -string "$APPLE_TEAM_ID" "$export_options"
+
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist "$export_options"
+
+          codesign --verify --deep --strict --verbose=2 "$EXPORT_PATH/Scopino.app"
+          app_architectures="$(lipo -archs "$EXPORT_PATH/Scopino.app/Contents/MacOS/Scopino")"
+          [[ "$app_architectures" == *arm64* && "$app_architectures" == *x86_64* ]] || {
+            echo "Build non universale: $app_architectures"
+            exit 1
+          }
+
+      - name: Create DMG
+        run: |
+          staging="$RUNNER_TEMP/dmg-root"
+          mkdir -p "$staging"
+          ditto "$EXPORT_PATH/Scopino.app" "$staging/Scopino.app"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create \
+            -volname Scopino \
+            -srcfolder "$staging" \
+            -ov \
+            -format UDZO \
+            "$DMG_PATH"
+
+      - name: Notarize and staple DMG
+        env:
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_APP_SPECIFIC_PASSWORD }}
+        run: |
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$NOTARY_APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$NOTARY_PASSWORD" \
+            --wait
+          xcrun stapler staple "$DMG_PATH"
+          xcrun stapler validate "$DMG_PATH"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG_PATH"
+
+      - name: Generate release metadata and Sparkle signature
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_BUILD: ${{ inputs.build }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          sign_update="$(find "$DERIVED_DATA/SourcePackages/artifacts" -type f -path '*/bin/sign_update' -perm -111 -print -quit)"
+          [[ -x "$sign_update" ]] || {
+            echo "Tool Sparkle sign_update non trovato"
+            exit 1
+          }
+
+          sparkle_attributes="$(printf '%s' "$SPARKLE_PRIVATE_KEY" | "$sign_update" --ed-key-file - "$DMG_PATH")"
+          sha256="$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')"
+          size="$(stat -f %z "$DMG_PATH")"
+
+          {
+            echo "version=$RELEASE_VERSION"
+            echo "build=$RELEASE_BUILD"
+            echo "size=$size"
+            echo "sha256=$sha256"
+            echo "$sparkle_attributes"
+          } > "$RUNNER_TEMP/Scopino-$RELEASE_VERSION-metadata.txt"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_MODE: ${{ inputs.release_mode }}
+        run: |
+          release_args=(
+            "v$RELEASE_VERSION"
+            "$DMG_PATH"
+            "$RUNNER_TEMP/Scopino-$RELEASE_VERSION-metadata.txt"
+            --target "$(git rev-parse HEAD)"
+            --title "Scopino $RELEASE_VERSION"
+            --generate-notes
+          )
+          if [[ "$RELEASE_MODE" == "draft" ]]; then
+            release_args+=(--draft)
+          fi
+          gh release create "${release_args[@]}"
+
+      - name: Clean temporary keychain
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/scopino-release.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/developer-id.p12"

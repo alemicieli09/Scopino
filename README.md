@@ -27,6 +27,7 @@ Scopino è un'app macOS leggera che vive nella menu bar e monitora in background
   - [XPC Helper](#xpc-helper)
 - [Permessi richiesti](#permessi-richiesti)
 - [Distribuzione](#distribuzione)
+- [Test e automazione](#test-e-automazione)
 - [Aggiornamenti automatici](#aggiornamenti-automatici-sparkle)
 - [Contribuire](#contribuire)
 - [Licenza](#licenza)
@@ -456,6 +457,51 @@ hdiutil create \
 # Firma il DMG con la chiave privata EdDSA
 /path/to/Sparkle/bin/sign_update Scopino-X.Y.dmg
 ```
+
+---
+
+## Test e automazione
+
+Il progetto include il target unit test **ScopinoTests** e uno schema condiviso.
+Per eseguire localmente la stessa verifica usata dalla CI:
+
+```bash
+xcodebuild test \
+  -project Scopino.xcodeproj \
+  -scheme Scopino \
+  -destination 'platform=macOS'
+```
+
+Il workflow `CI` viene eseguito su ogni pull request e su ogni push a `main`,
+usando un runner macOS 26. Conserva inoltre il risultato diagnostico dei test
+per 14 giorni.
+
+Il workflow manuale `Release`:
+
+1. verifica che versione e build richieste coincidano con il progetto;
+2. esegue tutti i test;
+3. crea un archivio universale `arm64` + `x86_64` firmato Developer ID;
+4. esporta l'app, crea il DMG, lo notarizza e applica il ticket Apple;
+5. firma il DMG con Sparkle e calcola dimensione e SHA-256;
+6. crea una release GitHub in bozza, oppure la pubblica se richiesto.
+
+Configurare un environment GitHub denominato `release`, preferibilmente con
+approvazione obbligatoria, e aggiungere questi secrets:
+
+| Secret | Contenuto |
+|---|---|
+| `APPLE_TEAM_ID` | Team ID Apple Developer |
+| `DEVELOPER_ID_CERTIFICATE_BASE64` | Certificato Developer ID Application `.p12`, codificato Base64 |
+| `DEVELOPER_ID_CERTIFICATE_PASSWORD` | Password del file `.p12` |
+| `RELEASE_KEYCHAIN_PASSWORD` | Password temporanea usata dal portachiavi del runner |
+| `NOTARY_APPLE_ID` | Apple ID usato per la notarizzazione |
+| `NOTARY_APP_SPECIFIC_PASSWORD` | Password specifica per l'app |
+| `SPARKLE_PRIVATE_KEY` | Chiave privata EdDSA di Sparkle |
+
+Il workflow non salva certificati o chiavi nel workspace e cancella il
+portachiavi temporaneo anche in caso di errore. La modalità predefinita crea
+una release in bozza, così DMG e metadati possono essere verificati prima della
+pubblicazione.
 
 ---
 

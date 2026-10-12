@@ -6,9 +6,12 @@
 //
 
 import Foundation
+import Security
 
 /// Entry point dell'XPC Helper.
 final class HelperDelegate: NSObject, NSXPCListenerDelegate {
+
+    private let clientRequirement = "anchor apple generic and identifier \"com.alemicieli.Scopino\" and certificate leaf[subject.OU] = \"E2BL3D4ETT\""
 
     func listener(
         _ listener: NSXPCListener,
@@ -30,13 +33,39 @@ final class HelperDelegate: NSObject, NSXPCListenerDelegate {
     }
 
     private func isCallerTrusted(_ connection: NSXPCConnection) -> Bool {
-        // In produzione verificare con SecCodeCopyGuestWithAttributes
-        // Per ora accetta connessioni locali
-        return true
+        let attributes = [
+            kSecGuestAttributePid as String: NSNumber(value: connection.processIdentifier)
+        ] as CFDictionary
+
+        var guestCode: SecCode?
+        guard SecCodeCopyGuestWithAttributes(
+            nil,
+            attributes,
+            SecCSFlags(),
+            &guestCode
+        ) == errSecSuccess, let guestCode else {
+            return false
+        }
+
+        var requirement: SecRequirement?
+        guard SecRequirementCreateWithString(
+            clientRequirement as CFString,
+            SecCSFlags(),
+            &requirement
+        ) == errSecSuccess, let requirement else {
+            return false
+        }
+
+        return SecCodeCheckValidity(
+            guestCode,
+            SecCSFlags(),
+            requirement
+        ) == errSecSuccess
     }
 }
 
 let delegate = HelperDelegate()
-let listener = NSXPCListener.service()
+let listener = NSXPCListener(machServiceName: "com.alemicieli.Scopino.helper")
 listener.delegate = delegate
 listener.resume()
+RunLoop.current.run()

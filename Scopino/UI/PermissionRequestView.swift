@@ -221,6 +221,11 @@ struct PermissionRequestView: View {
     /// Controlla ogni 2 secondi se il permesso è stato concesso.
     private func startPolling() {
         isChecking = true
+        accessGranted = PermissionChecker.hasFDAPermission()
+        if accessGranted {
+            isChecking = false
+            return
+        }
         checkTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             let granted = PermissionChecker.hasFDAPermission()
             withAnimation {

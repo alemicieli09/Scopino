@@ -9,6 +9,7 @@ import AppKit
 import SwiftUI
 import UserNotifications
 import Sparkle
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -39,17 +40,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Sparkle
         UpdateService.shared.setup()
 
-        // XPC Helper
-        HelperInstaller.shared.installIfNeeded()
+        // Ripara eventuali registrazioni create da vecchie build Xcode.
+        LoginItemManager.shared.repairRegistrationIfNeeded()
 
         // Notifiche
         UNUserNotificationCenter.current().delegate = self
         NotificationService.shared.setupCategories()
-        Task { await NotificationService.shared.requestAuthorization() }
+        Task { await NotificationService.shared.requestAuthorizationIfNeeded() }
 
-        // FDA
-        PermissionChecker.requestFDAPermission()
+        // FDA: mostra l'onboarding una sola volta, senza aprire Impostazioni.
         if PermissionChecker.needsOnboarding() {
+            PermissionChecker.markOnboardingPresented()
             showOnboarding()
         }
         
@@ -188,6 +189,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func runCleaner(session: CleanupSession, window: NSWindow) async {
+        guard session.hasSelectedItems else { return }
+
+        let privilegedItems = session.residuals.filter {
+            $0.isSelected && $0.requiresPrivileges
+        }
+
+        if !privilegedItems.isEmpty {
+            let helperReady = await preparePrivilegedHelper()
+            guard helperReady else { return }
+        }
+
         session.state = .inProgress
 
         cleaner.onProgress = { completed, total, _ in
@@ -214,6 +226,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 removed: session.successCount,
                 totalSize: session.displayTotalSize
             )
+        }
+    }
+
+    @MainActor
+    private func preparePrivilegedHelper() async -> Bool {
+        do {
+            let status = try HelperInstaller.shared.registerWhenNeeded()
+            if status == .enabled {
+                return true
+            }
+
+            let alert = NSAlert()
+            alert.alertStyle = .informational
+            alert.messageText = "Autorizzazione richiesta"
+            alert.informativeText = "Per rimuovere residui dalla Libreria di sistema, abilita l’elemento in background di Scopino. Puoi continuare senza concederlo deselezionando gli elementi con il lucchetto."
+            alert.addButton(withTitle: "Apri Elementi login")
+            alert.addButton(withTitle: "Annulla")
+
+            if alert.runModal() == .alertFirstButtonReturn {
+                HelperInstaller.shared.openApprovalSettings()
+            }
+            return false
+        } catch {
+            let alert = NSAlert(error: error)
+            alert.messageText = "Helper di Scopino non disponibile"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+            return false
         }
     }
     

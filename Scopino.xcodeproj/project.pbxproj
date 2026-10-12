@@ -7,10 +7,51 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10000000000000000000001 /* ScopinoHelper in Embed Helper Tool */ = {isa = PBXBuildFile; fileRef = F32282142FA9E0E800A0E868 /* ScopinoHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		A10000000000000000000002 /* com.alemicieli.Scopino.helper.plist in Embed LaunchDaemon Plist */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* com.alemicieli.Scopino.helper.plist */; };
 		F32282292FA9EB3500A0E868 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F32282282FA9EB3500A0E868 /* Sparkle */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B20000000000000000000007 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F32281962FA8944800A0E868 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F322819D2FA8944800A0E868;
+			remoteInfo = Scopino;
+		};
+		A10000000000000000000006 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F32281962FA8944800A0E868 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F32282132FA9E0E800A0E868;
+			remoteInfo = ScopinoHelper;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
+		A10000000000000000000004 /* Embed Helper Tool */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/HelperTools;
+			dstSubfolderSpec = 1;
+			files = (
+				A10000000000000000000001 /* ScopinoHelper in Embed Helper Tool */,
+			);
+			name = "Embed Helper Tool";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000005 /* Embed LaunchDaemon Plist */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchDaemons;
+			dstSubfolderSpec = 1;
+			files = (
+				A10000000000000000000002 /* com.alemicieli.Scopino.helper.plist in Embed LaunchDaemon Plist */,
+			);
+			name = "Embed LaunchDaemon Plist";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F32282122FA9E0E800A0E868 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -23,6 +64,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A10000000000000000000003 /* com.alemicieli.Scopino.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Scopino/Resources/com.alemicieli.Scopino.helper.plist; sourceTree = SOURCE_ROOT; };
+		B20000000000000000000001 /* ScopinoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScopinoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F322819E2FA8944800A0E868 /* Scopino.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Scopino.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F32282142FA9E0E800A0E868 /* ScopinoHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ScopinoHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -33,6 +76,7 @@
 			membershipExceptions = (
 				Core/PrivilegedHelper/HelperTool.swift,
 				HelpTool/Info.plist,
+				Resources/com.alemicieli.Scopino.helper.plist,
 				Resources/Info.plist,
 			);
 			target = F322819D2FA8944800A0E868 /* Scopino */;
@@ -62,6 +106,11 @@
 			path = ScopinoHelper;
 			sourceTree = "<group>";
 		};
+		B20000000000000000000002 /* ScopinoTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ScopinoTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +129,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B20000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -88,6 +144,8 @@
 			children = (
 				F32281A02FA8944800A0E868 /* Scopino */,
 				F32282152FA9E0E800A0E868 /* ScopinoHelper */,
+				B20000000000000000000002 /* ScopinoTests */,
+				A10000000000000000000003 /* com.alemicieli.Scopino.helper.plist */,
 				F32282242FA9E95000A0E868 /* Frameworks */,
 				F322819F2FA8944800A0E868 /* Products */,
 			);
@@ -98,6 +156,7 @@
 			children = (
 				F322819E2FA8944800A0E868 /* Scopino.app */,
 				F32282142FA9E0E800A0E868 /* ScopinoHelper */,
+				B20000000000000000000001 /* ScopinoTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,10 +178,13 @@
 				F322819A2FA8944800A0E868 /* Sources */,
 				F322819B2FA8944800A0E868 /* Frameworks */,
 				F322819C2FA8944800A0E868 /* Resources */,
+				A10000000000000000000004 /* Embed Helper Tool */,
+				A10000000000000000000005 /* Embed LaunchDaemon Plist */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A10000000000000000000007 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F32281A02FA8944800A0E868 /* Scopino */,
@@ -157,6 +219,29 @@
 			productReference = F32282142FA9E0E800A0E868 /* ScopinoHelper */;
 			productType = "com.apple.product-type.tool";
 		};
+		B20000000000000000000006 /* ScopinoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B2000000000000000000000B /* Build configuration list for PBXNativeTarget "ScopinoTests" */;
+			buildPhases = (
+				B20000000000000000000004 /* Sources */,
+				B20000000000000000000003 /* Frameworks */,
+				B20000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B20000000000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B20000000000000000000002 /* ScopinoTests */,
+			);
+			name = ScopinoTests;
+			packageProductDependencies = (
+			);
+			productName = ScopinoTests;
+			productReference = B20000000000000000000001 /* ScopinoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -172,6 +257,10 @@
 					};
 					F32282132FA9E0E800A0E868 = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					B20000000000000000000006 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = F322819D2FA8944800A0E868;
 					};
 				};
 			};
@@ -195,11 +284,19 @@
 			targets = (
 				F322819D2FA8944800A0E868 /* Scopino */,
 				F32282132FA9E0E800A0E868 /* ScopinoHelper */,
+					B20000000000000000000006 /* ScopinoTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B20000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F322819C2FA8944800A0E868 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -224,7 +321,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B20000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A10000000000000000000007 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F32282132FA9E0E800A0E868 /* ScopinoHelper */;
+			targetProxy = A10000000000000000000006 /* PBXContainerItemProxy */;
+		};
+		B20000000000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F322819D2FA8944800A0E868 /* Scopino */;
+			targetProxy = B20000000000000000000007 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		F32281A72FA8944A00A0E868 /* Debug */ = {
@@ -361,7 +478,7 @@
 				CODE_SIGN_ENTITLEMENTS = Scopino/Resources/Scopino.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E2BL3D4ETT;
 				ENABLE_APP_SANDBOX = NO;
@@ -399,7 +516,7 @@
 				CODE_SIGN_ENTITLEMENTS = Scopino/Resources/Scopino.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E2BL3D4ETT;
 				ENABLE_APP_SANDBOX = NO;
@@ -434,11 +551,14 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ScopinoHelper/ScopinoHelper.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E2BL3D4ETT;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Scopino/HelpTool/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alemicieli.Scopino.helper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -452,16 +572,53 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ScopinoHelper/ScopinoHelper.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E2BL3D4ETT;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Scopino/HelpTool/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alemicieli.Scopino.helper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B20000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = E2BL3D4ETT;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alemicieli.ScopinoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Scopino.app/Contents/MacOS/Scopino";
+			};
+			name = Debug;
+		};
+		B2000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = E2BL3D4ETT;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alemicieli.ScopinoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Scopino.app/Contents/MacOS/Scopino";
 			};
 			name = Release;
 		};
@@ -491,6 +648,15 @@
 			buildConfigurations = (
 				F32282192FA9E0E800A0E868 /* Debug */,
 				F322821A2FA9E0E800A0E868 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B2000000000000000000000B /* Build configuration list for PBXNativeTarget "ScopinoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B20000000000000000000009 /* Debug */,
+				B2000000000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

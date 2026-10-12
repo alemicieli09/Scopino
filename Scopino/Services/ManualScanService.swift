@@ -57,7 +57,7 @@ final class ManualScanService {
 
         for (appInfo, residuals) in grouped {
             guard !residuals.isEmpty else { continue }
-            let significant = residuals.filter { $0.sizeBytes > 1024 }
+            let significant = Self.reviewItems(from: residuals)
             guard !significant.isEmpty else { continue }
 
             let app = DetectedApp(
@@ -67,11 +67,25 @@ final class ManualScanService {
                 removalDate: Date()
             )
             let session = CleanupSession(app: app)
-            session.residuals = residuals
+            // La scansione manuale deduce l'associazione dal nome dei file:
+            // nessun risultato ambiguo viene preselezionato per la rimozione.
+            session.residuals = significant
             sessions.append(session)
         }
 
-        return sessions.sorted { $0.totalSizeBytes > $1.totalSizeBytes }
+        return sessions.sorted { $0.detectedSizeBytes > $1.detectedSizeBytes }
+    }
+
+    /// Applica la policy conservativa della scansione manuale: ignora i file
+    /// trascurabili e richiede sempre una selezione esplicita dell'utente.
+    static func reviewItems(from residuals: [ResidualItem]) -> [ResidualItem] {
+        residuals
+            .filter { $0.sizeBytes > 1024 }
+            .map { item in
+                var unselected = item
+                unselected.isSelected = false
+                return unselected
+            }
     }
 
     // MARK: - Installed apps
@@ -81,6 +95,9 @@ final class ManualScanService {
         let fm = FileManager.default
         addApps(in: "/Applications", to: &bundleIDs, fm: fm)
         addApps(in: "/Applications/Utilities", to: &bundleIDs, fm: fm)
+        addApps(in: "/System/Applications", to: &bundleIDs, fm: fm)
+        addApps(in: "/System/Applications/Utilities", to: &bundleIDs, fm: fm)
+        addApps(in: "/System/Library/CoreServices", to: &bundleIDs, fm: fm)
         let home = fm.homeDirectoryForCurrentUser.path
         addApps(in: "\(home)/Applications", to: &bundleIDs, fm: fm)
         bundleIDs.formUnion(knownActiveApps)
@@ -132,6 +149,7 @@ final class ManualScanService {
         ]
 
         var results: [ResidualItem] = []
+        var seenPaths = Set<String>()
 
         for target in scanPaths {
             guard let items = try? fm.contentsOfDirectory(atPath: target.path) else { continue }
@@ -139,11 +157,20 @@ final class ManualScanService {
             for item in items {
                 guard let bundleID = extractBundleID(from: item) else { continue }
                 if isBlocked(bundleID) { continue }
-                if installed.contains(bundleID) { continue }
-                let prefix = bundleID.split(separator: ".").prefix(2).joined(separator: ".")
-                if installed.contains(prefix) { continue }
+                if isAssociatedWithInstalledApp(bundleID, installed: installed) { continue }
 
-                let fullPath = "\(target.path)/\(item)"
+                // NSWorkspace può conoscere applicazioni installate fuori dalle
+                // cartelle standard. Accetta il risultato solo se l'URL esiste.
+                if let appURL = NSWorkspace.shared.urlForApplication(
+                    withBundleIdentifier: bundleID
+                ), fm.fileExists(atPath: appURL.path) {
+                    continue
+                }
+
+                let fullPath = URL(fileURLWithPath: target.path)
+                    .appendingPathComponent(item)
+                    .standardizedFileURL.path
+                guard seenPaths.insert(fullPath).inserted else { continue }
                 results.append(ResidualItem(path: fullPath, category: target.category, sizeBytes: 0))
             }
         }
@@ -166,6 +193,20 @@ final class ManualScanService {
 
     private func isBlocked(_ bundleID: String) -> Bool {
         blockedPrefixes.contains(where: { bundleID.hasPrefix($0) })
+    }
+
+    /// Considera attivo anche un componente, helper o estensione che condivide
+    /// il namespace di un'app installata. Privilegia i falsi negativi rispetto
+    /// al rischio di proporre dati ancora in uso.
+    private func isAssociatedWithInstalledApp(
+        _ candidate: String,
+        installed: Set<String>
+    ) -> Bool {
+        installed.contains { installedID in
+            candidate == installedID
+                || candidate.hasPrefix(installedID + ".")
+                || installedID.hasPrefix(candidate + ".")
+        }
     }
 
     // MARK: - Display name resolution

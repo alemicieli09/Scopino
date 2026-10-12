@@ -79,7 +79,7 @@ struct ManualScanView: View {
                 Text("Cerca residui sul disco")
                     .font(.title3)
                     .fontWeight(.semibold)
-                Text("Scopino analizzerà la libreria di sistema cercando file\ndi app che non sono più installate.")
+                Text("Scopino cercherà possibili residui nella Libreria.\nI risultati dovranno essere controllati e selezionati manualmente.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -146,18 +146,18 @@ struct ManualScanView: View {
 
     private var resultsList: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("\(sessions.count) app con residui · \(totalSizeDisplay)")
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(sessions.count) gruppi da esaminare · \(totalSizeDisplay)")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button("Pulisci tutto") {
-                    cleanAll()
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .controlSize(.small)
+                    .fontWeight(.medium)
+                Label(
+                    "Nessun elemento è selezionato automaticamente.",
+                    systemImage: "exclamationmark.shield"
+                )
+                .font(.caption)
+                .foregroundStyle(.orange)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
             .background(Color(.controlBackgroundColor))
@@ -221,7 +221,7 @@ struct ManualScanView: View {
 
             // Dimensione + contatore
             VStack(alignment: .trailing, spacing: 2) {
-                Text(session.displayTotalSize)
+                Text(session.displayDetectedSize)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.red)
@@ -230,12 +230,12 @@ struct ManualScanView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // Bottone Pulisci
-            Button("Pulisci") {
+            // Apre la revisione dettagliata; gli elementi partono deselezionati.
+            Button("Esamina") {
                 cleanSession(session)
             }
             .buttonStyle(.bordered)
-            .tint(.red)
+            .tint(.blue)
             .controlSize(.small)
         }
         .padding(.horizontal, 24)
@@ -283,20 +283,10 @@ struct ManualScanView: View {
         onClose()
     }
 
-    private func cleanAll() {
-        for session in sessions {
-            NotificationCenter.default.post(
-                name: .scopinoStartCleanup,
-                object: session
-            )
-        }
-        onClose()
-    }
-
     // MARK: - Computed
 
     private var totalSizeDisplay: String {
-        let total = sessions.reduce(Int64(0)) { $0 + $1.totalSizeBytes }
+        let total = sessions.reduce(Int64(0)) { $0 + $1.detectedSizeBytes }
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return formatter.string(fromByteCount: total)

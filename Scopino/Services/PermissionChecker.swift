@@ -10,27 +10,28 @@ import AppKit
 
 final class PermissionChecker {
 
+    private static let onboardingPresentedKey = "permissions.onboardingPresented"
+
     // MARK: - Full Disk Access
 
     static func hasFDAPermission() -> Bool {
-        let testPaths = [
-            "\(NSHomeDirectory())/Library/Safari/History.db",
-            "/Library/Application Support/com.apple.TCC/TCC.db",
-        ]
-        for path in testPaths {
-            if FileManager.default.isReadableFile(atPath: path) {
-                return true
-            }
+        // macOS non espone un'API pubblica per interrogare direttamente FDA.
+        // Il database TCC dell'utente esiste su ogni installazione ed è leggibile
+        // solo dai processi ai quali è stato concesso Accesso completo al disco.
+        let tccDatabase = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/com.apple.TCC/TCC.db")
+
+        guard FileManager.default.fileExists(atPath: tccDatabase.path) else {
+            return false
         }
-        return false
-    }
 
-    // MARK: - Request FDA
-
-    static func requestFDAPermission() {
-        let path = "/Library/Application Support/com.apple.TCC/TCC.db"
-        _ = FileManager.default.fileExists(atPath: path)
-        _ = try? Data(contentsOf: URL(fileURLWithPath: path))
+        do {
+            let handle = try FileHandle(forReadingFrom: tccDatabase)
+            try handle.close()
+            return true
+        } catch {
+            return false
+        }
     }
 
     // MARK: - Automation
@@ -68,6 +69,11 @@ final class PermissionChecker {
     // MARK: - Onboarding gate
 
     static func needsOnboarding() -> Bool {
-        return !hasFDAPermission()
+        !UserDefaults.standard.bool(forKey: onboardingPresentedKey)
+            && !hasFDAPermission()
+    }
+
+    static func markOnboardingPresented() {
+        UserDefaults.standard.set(true, forKey: onboardingPresentedKey)
     }
 }
