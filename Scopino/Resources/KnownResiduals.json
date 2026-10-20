@@ -94,7 +94,7 @@
       ]
     },
     {
-      "bundleID": "com.zoom.xos",
+      "bundleID": "us.zoom.xos",
       "extraPaths": [
         "~/Library/Application Support/zoom.us",
         "~/Library/Caches/us.zoom.xos",
@@ -137,6 +137,45 @@
         "~/Library/Caches/com.skype.skype",
         "~/Library/Preferences/com.skype.skype.plist",
         "~/Library/Cookies/com.skype.skype.binarycookies"
+      ]
+    },
+    {
+      "bundleID": "notion.id",
+      "extraPaths": [
+        "~/Library/Application Support/Notion",
+        "~/Library/Caches/notion-updater"
+      ]
+    },
+    {
+      "bundleID": "com.cron.electron",
+      "extraPaths": [
+        "~/Library/Application Support/Notion Calendar",
+        "~/Library/Caches/cron-updater"
+      ]
+    },
+    {
+      "bundleID": "org.gimp.gimp-3.0",
+      "extraPaths": [
+        "~/Library/Application Support/GIMP"
+      ]
+    },
+    {
+      "bundleID": "com.github.atom",
+      "extraPaths": [
+        "~/Library/Application Support/Atom"
+      ]
+    },
+    {
+      "bundleID": "com.obsproject.obs-studio",
+      "extraPaths": [
+        "~/Library/Application Support/obs-studio"
+      ]
+    },
+    {
+      "bundleID": "com.foxit-software.Foxit.PDF.Reader",
+      "extraPaths": [
+        "~/Library/Application Support/Foxit Software",
+        "/Library/Application Support/Foxit Software"
       ]
     }
   ]

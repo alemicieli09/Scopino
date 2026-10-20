@@ -27,7 +27,7 @@ final class HelperDelegate: NSObject, NSXPCListenerDelegate {
         connection.exportedInterface = NSXPCInterface(
             with: ScopinoHelperProtocol.self
         )
-        connection.exportedObject = HelperTool()
+        connection.exportedObject = HelperTool(userID: connection.effectiveUserIdentifier)
         connection.resume()
         return true
     }

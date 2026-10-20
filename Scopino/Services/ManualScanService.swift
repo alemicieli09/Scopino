@@ -1,298 +1,37 @@
-//
-//  ManualScanService.swift
-//  Scopino
-//
-//  Created by Alessandro Micieli on 08/05/2026.
-//
-
 import Foundation
-import AppKit
 
-/// Cerca app che hanno lasciato residui sul disco
-/// senza che Scopino fosse attivo al momento della rimozione.
 final class ManualScanService {
-
-    // MARK: - Blocklist
-
-    private let blockedPrefixes: [String] = [
-        // Apple e sistema
-        "com.apple", "com.apple.",
-        // Tool di sviluppo
-        "org.swift", "com.llvm", "org.llvm", "org.gnu",
-        "com.jetbrains", "org.chromium",
-        // Framework e runtime
-        "com.adobe.acc", "com.adobe.adobeupdate", "com.adobe.armdc",
-        // SDK e framework usati da app attive
-        "com.crashlytics",
-        "com.bugsnag",
-        "io.branch",
-        "org.freedesktop",
-        "net.java",
-        // macOS internals
-        "com.smileonmymac",
-        "com.objective-see",
-        // Scopino stesso
-        "com.alemicieli",
-    ]
-
-    private let knownActiveApps: Set<String> = [
-        "com.microsoft.rdc", "com.microsoft.autoupdate2", "com.microsoft.office",
-        "com.openai", "net.whatsapp", "com.canva", "com.notion",
-        "com.figma", "com.electron",
-        // Adobe — file condivisi tra app
-        "com.adobe",
-        // Browser
-        "com.brave.Browser",
-        // Virtualizzazione
-        "com.utmapp",
-    ]
-
-    // MARK: - Scan
+    private(set) var unreadablePaths: [String] = []
 
     func scan() async -> [CleanupSession] {
-        var sessions: [CleanupSession] = []
-        let installedBundleIDs = installedApps()
-        let candidates = await findOrphanedResiduals(excludingBundleIDs: installedBundleIDs)
-        let grouped = groupByApp(candidates)
-
-        for (appInfo, residuals) in grouped {
-            guard !residuals.isEmpty else { continue }
-            let significant = Self.reviewItems(from: residuals)
-            guard !significant.isEmpty else { continue }
-
-            let app = DetectedApp(
-                name: appInfo.name,
-                bundleID: appInfo.bundleID,
-                icon: nil,
-                removalDate: Date()
-            )
-            let session = CleanupSession(app: app)
-            // La scansione manuale deduce l'associazione dal nome dei file:
-            // nessun risultato ambiguo viene preselezionato per la rimozione.
-            session.residuals = significant
-            sessions.append(session)
+        let inventory = await Task.detached(priority: .utility) { ApplicationInventory.collect() }.value
+        let report = await ResidualScanEngine().scan(inventory: inventory)
+        unreadablePaths = report.unreadablePaths
+        var groups: [String: [ResidualItem]] = [:]
+        let known = KnownResidualsDB.shared.allPaths
+        for item in report.items {
+            let identifier = ResidualAssociation.identifier(from: item.displayName)
+            let namespaceOwner = identifier.flatMap { id in
+                known.keys.filter { ResidualAssociation.belongs(identifier: id, to: $0) }
+                    .max { $0.count < $1.count }
+            }
+            let owner = known.first { $0.value.contains(item.path) }?.key
+                ?? namespaceOwner ?? identifier ?? item.displayName
+            groups[owner, default: []].append(item)
         }
-
-        return sessions.sorted { $0.detectedSizeBytes > $1.detectedSizeBytes }
+        return groups.map { owner, items in
+            let session = CleanupSession(app: DetectedApp(name: owner, bundleID: owner,
+                                                         icon: nil, removalDate: Date()))
+            session.residuals = Self.reviewItems(from: items)
+            return session
+        }.sorted { $0.detectedSizeBytes > $1.detectedSizeBytes }
     }
 
-    /// Applica la policy conservativa della scansione manuale: ignora i file
-    /// trascurabili e richiede sempre una selezione esplicita dell'utente.
     static func reviewItems(from residuals: [ResidualItem]) -> [ResidualItem] {
-        residuals
-            .filter { $0.sizeBytes > 1024 }
-            .map { item in
-                var unselected = item
-                unselected.isSelected = false
-                return unselected
-            }
-    }
-
-    // MARK: - Installed apps
-
-    private func installedApps() -> Set<String> {
-        var bundleIDs = Set<String>()
-        let fm = FileManager.default
-        addApps(in: "/Applications", to: &bundleIDs, fm: fm)
-        addApps(in: "/Applications/Utilities", to: &bundleIDs, fm: fm)
-        addApps(in: "/System/Applications", to: &bundleIDs, fm: fm)
-        addApps(in: "/System/Applications/Utilities", to: &bundleIDs, fm: fm)
-        addApps(in: "/System/Library/CoreServices", to: &bundleIDs, fm: fm)
-        let home = fm.homeDirectoryForCurrentUser.path
-        addApps(in: "\(home)/Applications", to: &bundleIDs, fm: fm)
-        bundleIDs.formUnion(knownActiveApps)
-        return bundleIDs
-    }
-
-    private func addApps(
-        in directory: String,
-        to bundleIDs: inout Set<String>,
-        fm: FileManager
-    ) {
-        guard let items = try? fm.contentsOfDirectory(atPath: directory) else { return }
-        for item in items where item.hasSuffix(".app") {
-            let plistPath = "\(directory)/\(item)/Contents/Info.plist"
-            if let bid = NSDictionary(contentsOfFile: plistPath)?["CFBundleIdentifier"] as? String {
-                bundleIDs.insert(bid)
-                let prefix = bid.split(separator: ".").prefix(2).joined(separator: ".")
-                bundleIDs.insert(prefix)
-            }
+        residuals.map { item in
+            var copy = item
+            copy.isSelected = false
+            return copy
         }
-    }
-
-    // MARK: - Find orphaned residuals
-
-    private struct AppInfo: Hashable {
-        let name: String
-        let bundleID: String?
-    }
-
-    private func findOrphanedResiduals(
-        excludingBundleIDs installed: Set<String>
-    ) async -> [ResidualItem] {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let fm = FileManager.default
-
-        let scanPaths: [(path: String, category: ResidualCategory)] = [
-            ("\(home)/Library/Preferences",             .preferences),
-            ("\(home)/Library/Application Support",     .applicationSupport),
-            ("\(home)/Library/Caches",                  .cache),
-            ("\(home)/Library/Logs",                    .logs),
-            ("\(home)/Library/Containers",              .container),
-            ("\(home)/Library/Group Containers",        .groupContainer),
-            ("\(home)/Library/LaunchAgents",            .launchAgent),
-            ("\(home)/Library/Saved Application State", .savedState),
-            ("/Library/LaunchAgents",                   .launchAgent),
-            ("/Library/LaunchDaemons",                  .launchDaemon),
-            ("/Library/Application Support",            .applicationSupport),
-            ("/Library/Preferences",                    .preferences),
-        ]
-
-        var results: [ResidualItem] = []
-        var seenPaths = Set<String>()
-
-        for target in scanPaths {
-            guard let items = try? fm.contentsOfDirectory(atPath: target.path) else { continue }
-
-            for item in items {
-                guard let bundleID = extractBundleID(from: item) else { continue }
-                if isBlocked(bundleID) { continue }
-                if isAssociatedWithInstalledApp(bundleID, installed: installed) { continue }
-
-                // NSWorkspace può conoscere applicazioni installate fuori dalle
-                // cartelle standard. Accetta il risultato solo se l'URL esiste.
-                if let appURL = NSWorkspace.shared.urlForApplication(
-                    withBundleIdentifier: bundleID
-                ), fm.fileExists(atPath: appURL.path) {
-                    continue
-                }
-
-                let fullPath = URL(fileURLWithPath: target.path)
-                    .appendingPathComponent(item)
-                    .standardizedFileURL.path
-                guard seenPaths.insert(fullPath).inserted else { continue }
-                results.append(ResidualItem(path: fullPath, category: target.category, sizeBytes: 0))
-            }
-        }
-
-        return await withTaskGroup(of: ResidualItem.self) { group in
-            for item in results {
-                group.addTask {
-                    var copy = item
-                    copy.sizeBytes = await ResidualFinder.sizeOf(path: item.path)
-                    return copy
-                }
-            }
-            var sized: [ResidualItem] = []
-            for await item in group { sized.append(item) }
-            return sized.filter { $0.sizeBytes > 0 }
-        }
-    }
-
-    // MARK: - Blocked check
-
-    private func isBlocked(_ bundleID: String) -> Bool {
-        blockedPrefixes.contains(where: { bundleID.hasPrefix($0) })
-    }
-
-    /// Considera attivo anche un componente, helper o estensione che condivide
-    /// il namespace di un'app installata. Privilegia i falsi negativi rispetto
-    /// al rischio di proporre dati ancora in uso.
-    private func isAssociatedWithInstalledApp(
-        _ candidate: String,
-        installed: Set<String>
-    ) -> Bool {
-        installed.contains { installedID in
-            candidate == installedID
-                || candidate.hasPrefix(installedID + ".")
-                || installedID.hasPrefix(candidate + ".")
-        }
-    }
-
-    // MARK: - Display name resolution
-
-    /// Cerca il nome human-readable dell'app in questo ordine:
-    /// 1. NSWorkspace (app ancora in cache di sistema)
-    /// 2. Cartella Application Support (spesso usa nome app)
-    /// 3. Fallback al bundleID originale
-    private func resolvedDisplayName(
-        for bundleID: String,
-        originalFilename: String
-    ) -> String {
-        // 1. NSWorkspace — se l'app è ancora in cache
-        if let url = NSWorkspace.shared.urlForApplication(
-            withBundleIdentifier: bundleID
-        ) {
-            let name = url.deletingPathExtension().lastPathComponent
-            if !name.isEmpty && !name.contains(".") {
-                return name
-            }
-        }
-
-        // 2. Application Support — cerca cartella con nome simile
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let appSupportPath = "\(home)/Library/Application Support"
-        let lastComponent = bundleID.split(separator: ".").last.map(String.init) ?? ""
-
-        if let items = try? FileManager.default.contentsOfDirectory(atPath: appSupportPath) {
-            // Match esatto case-insensitive
-            for item in items {
-                if item.lowercased() == lastComponent.lowercased() {
-                    return item
-                }
-            }
-            // Match parziale — il nome contiene l'ultima componente
-            for item in items {
-                if item.lowercased().contains(lastComponent.lowercased())
-                    && !item.contains(".") {
-                    return item
-                }
-            }
-        }
-
-        // 3. Fallback — usa il filename originale senza estensione
-        return (originalFilename as NSString).deletingPathExtension
-    }
-
-    // MARK: - Group by app
-
-    private func groupByApp(
-        _ items: [ResidualItem]
-    ) -> [AppInfo: [ResidualItem]] {
-        var grouped: [AppInfo: [ResidualItem]] = [:]
-
-        for item in items {
-            let filename = (item.path as NSString).lastPathComponent
-            guard let bundleID = extractBundleID(from: filename) else { continue }
-
-            let groupID = bundleID.split(separator: ".")
-                .prefix(3).joined(separator: ".")
-
-            // Risolvi nome human-readable
-            let name = resolvedDisplayName(
-                for: groupID,
-                originalFilename: filename
-            )
-
-            let appInfo = AppInfo(name: name, bundleID: groupID)
-            grouped[appInfo, default: []].append(item)
-        }
-
-        return grouped
-    }
-
-    // MARK: - BundleID extraction
-
-    private func extractBundleID(from filename: String) -> String? {
-        let name = (filename as NSString).deletingPathExtension
-        let parts = name.split(separator: ".")
-        guard parts.count >= 2 else { return nil }
-
-        let knownTLDs = ["com", "org", "net", "io", "app", "co", "it",
-                         "de", "fr", "eu", "me", "dev", "uk", "us"]
-        guard let first = parts.first,
-              knownTLDs.contains(String(first).lowercased()) else { return nil }
-
-        return parts.prefix(3).joined(separator: ".")
     }
 }

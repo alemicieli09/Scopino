@@ -9,7 +9,11 @@ import Foundation
 
 final class HelperTool: NSObject, ScopinoHelperProtocol {
 
-    func removeItems(
+    private let userID: uid_t
+
+    init(userID: uid_t) { self.userID = userID }
+
+    func trashItems(
         atPaths paths: [String],
         withReply reply: @escaping ([String]) -> Void
     ) {
@@ -26,7 +30,31 @@ final class HelperTool: NSObject, ScopinoHelperProtocol {
                 continue
             }
             do {
-                try fm.removeItem(atPath: path)
+                guard userID != 0, let account = getpwuid(userID) else {
+                    throw NSError(domain: "ScopinoHelper", code: 1, userInfo: [NSLocalizedDescriptionKey: "Utente non valido"])
+                }
+                let home = String(cString: account.pointee.pw_dir)
+                let trash = URL(fileURLWithPath: home).appendingPathComponent(".Trash")
+                // Never follow user-controlled symlinks with root privileges.
+                guard trash.resolvingSymlinksInPath().path == trash.path,
+                      let attributes = try? fm.attributesOfItem(atPath: trash.path),
+                      attributes[.type] as? FileAttributeType == .typeDirectory,
+                      (attributes[.ownerAccountID] as? NSNumber)?.uint32Value == userID,
+                      let permissions = attributes[.posixPermissions] as? NSNumber,
+                      permissions.intValue & 0o022 == 0 else {
+                    throw NSError(domain: "ScopinoHelper", code: 2, userInfo: [NSLocalizedDescriptionKey: "Cestino non disponibile o non sicuro"])
+                }
+                let destination = trash.appendingPathComponent(UUID().uuidString + "-" + URL(fileURLWithPath: path).lastPathComponent)
+                let descriptor = open(trash.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+                guard descriptor >= 0 else { throw POSIXError(.EACCES) }
+                defer { close(descriptor) }
+                var status = stat()
+                guard fstat(descriptor, &status) == 0, status.st_uid == userID,
+                      status.st_mode & 0o022 == 0 else { throw POSIXError(.EACCES) }
+                // Pin the destination directory; do not follow a swapped .Trash symlink.
+                guard renameat(AT_FDCWD, path, descriptor, destination.lastPathComponent) == 0 else {
+                    throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+                }
                 errors.append("")
                 NSLog("[ScopinoHelper] Rimosso: \(path)")
             } catch {
@@ -38,7 +66,7 @@ final class HelperTool: NSObject, ScopinoHelperProtocol {
     }
 
     func getVersion(withReply reply: @escaping (String) -> Void) {
-        reply("1.0.0")
+        reply("2.0.0")
     }
 
     /// Il daemon accetta esclusivamente figli diretti delle directory

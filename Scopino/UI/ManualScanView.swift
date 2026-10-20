@@ -14,6 +14,7 @@ struct ManualScanView: View {
     @State private var sessions: [CleanupSession] = []
     @State private var isScanning = false
     @State private var scanDone = false
+    @State private var unreadablePaths: [String] = []
 
     private let service = ManualScanService()
 
@@ -24,6 +25,11 @@ struct ManualScanView: View {
                 .padding(.vertical, 16)
 
             Divider()
+            if !unreadablePaths.isEmpty {
+                Label("Scansione incompleta: \(unreadablePaths.count) percorsi non leggibili.", systemImage: "exclamationmark.triangle")
+                    .font(.caption).foregroundStyle(.orange).padding(8)
+                    .help(unreadablePaths.joined(separator: "\n"))
+            }
 
             if isScanning {
                 scanningView
@@ -131,7 +137,7 @@ struct ManualScanView: View {
             Text("Nessun residuo trovato")
                 .font(.title3)
                 .fontWeight(.semibold)
-            Text("Il tuo Mac è pulito — nessun file orfano rilevato.")
+            Text(unreadablePaths.isEmpty ? "Nessun candidato nei percorsi esaminati." : "Alcuni percorsi non sono stati esaminati. Controlla i permessi di accesso al disco.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Spacer()
@@ -265,10 +271,12 @@ struct ManualScanView: View {
         isScanning = true
         scanDone = false
         sessions = []
+        unreadablePaths = []
         Task {
             let found = await service.scan()
             await MainActor.run {
                 sessions = found
+                unreadablePaths = service.unreadablePaths
                 isScanning = false
                 scanDone = true
             }

@@ -8,7 +8,7 @@
 import Foundation
 
 /// Categoria del residuo, usata per UI e ordinamento.
-enum ResidualCategory: String, CaseIterable {
+nonisolated enum ResidualCategory: String, CaseIterable {
     case preferences     = "Preferenze"
     case applicationSupport = "Application Support"
     case cache           = "Cache"
@@ -37,12 +37,15 @@ enum ResidualCategory: String, CaseIterable {
 }
 
 /// Rappresenta un singolo file/cartella residuo trovato sul disco.
-struct ResidualItem: Identifiable {
+nonisolated struct ResidualItem: Identifiable, Sendable {
     let id = UUID()
     let path: String
     let category: ResidualCategory
     var sizeBytes: Int64
     var isSelected: Bool = true  // selezionato per default → pulizia totale
+
+    var confidence: ResidualConfidence = .confirmed
+    var associationReason: String = ""
 
     /// Nome display (ultima componente del path)
     var displayName: String {
@@ -61,4 +64,10 @@ struct ResidualItem: Identifiable {
         path.hasPrefix("/Library/") ||
         path.hasPrefix("/System/")
     }
+}
+
+nonisolated enum ResidualConfidence: String {
+    case confirmed = "Associazione confermata"
+    case review = "Da verificare"
+    case shared = "Dati condivisi"
 }

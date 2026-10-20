@@ -129,12 +129,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let residuals = await finder.findResiduals(for: app)
 
-        guard !residuals.isEmpty else {
+        guard !residuals.isEmpty || !finder.unreadablePaths.isEmpty else {
             activeSessions.removeAll { $0.id == session.id }
             return
         }
 
         session.residuals = residuals
+        session.unreadablePaths = finder.unreadablePaths
 
         // Notifica residui trovati
         NotificationService.shared.notifyResidualsFound(

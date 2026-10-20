@@ -66,6 +66,10 @@ final class KnownResidualsDB {
         db[bundleID] != nil
     }
 
+    var allPaths: [String: [String]] {
+        db.mapValues { $0.map { expandTilde($0) } }
+    }
+
     // MARK: - Tilde expansion
 
     private func expandTilde(_ path: String) -> String {

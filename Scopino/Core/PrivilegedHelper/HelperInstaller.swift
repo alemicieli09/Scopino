@@ -104,8 +104,17 @@ final class HelperInstaller {
                 return
             }
 
-            helper.removeItems(atPaths: paths) { errors in
-                continuation.resume(returning: errors)
+            helper.getVersion { version in
+                guard version == "2.0.0" else {
+                    continuation.resume(returning: Array(
+                        repeating: "Helper da aggiornare: la versione installata non supporta il Cestino recuperabile",
+                        count: paths.count
+                    ))
+                    return
+                }
+                helper.trashItems(atPaths: paths) { errors in
+                    continuation.resume(returning: errors)
+                }
             }
         }
     }

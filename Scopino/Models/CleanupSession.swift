@@ -22,6 +22,7 @@ final class CleanupSession: ObservableObject, Identifiable {
     let app: DetectedApp
     let startDate: Date
 
+    @Published var unreadablePaths: [String] = []
     @Published var residuals: [ResidualItem] = []
     @Published var state: CleanupSessionState = .waitingForUser
     @Published var results: [CleanupResult] = []

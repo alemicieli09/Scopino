@@ -8,7 +8,7 @@
 import AppKit
 
 /// Rappresenta un'app che è stata rimossa da /Applications.
-struct DetectedApp: Identifiable {
+nonisolated struct DetectedApp: Identifiable {
     let id = UUID()
     let name: String
     let bundleID: String?
@@ -21,16 +21,7 @@ struct DetectedApp: Identifiable {
     /// Tutti i possibili identificatori da usare per la ricerca dei residui
     var searchTokens: [String] {
         var tokens: [String] = [name]
-        if let bid = bundleID {
-            tokens.append(bid)
-            // Aggiunge anche la parte finale del bundleID (es. "firefox" da "org.mozilla.firefox")
-            if let last = bid.split(separator: ".").last {
-                let lastStr = String(last)
-                if lastStr != name.lowercased() {
-                    tokens.append(lastStr)
-                }
-            }
-        }
+        if let bid = bundleID { tokens.append(bid) }
         return tokens
     }
 }

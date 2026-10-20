@@ -55,6 +55,11 @@ struct CleanupProposalWindow: View {
                 .padding(.horizontal, 24)
 
             // Lista residui
+            if !session.unreadablePaths.isEmpty {
+                Label("Scansione incompleta: alcuni percorsi non sono leggibili.", systemImage: "exclamationmark.triangle")
+                    .font(.caption).foregroundStyle(.orange)
+                    .help(session.unreadablePaths.joined(separator: "\n"))
+            }
             ResidualListView(residuals: $session.residuals)
                 .padding(.horizontal, 24)
                 .padding(.top, 16)

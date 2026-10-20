@@ -44,7 +44,7 @@ final class AppWatcher {
             nil,
             callback,
             &context,
-            [watchedPath] as CFArray,
+            [watchedPath, FileManager.default.homeDirectoryForCurrentUser.path + "/Applications"] as CFArray,
             FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
             0.5, // latenza secondi
             FSEventStreamCreateFlags(kFSEventStreamCreateFlagNone)
@@ -74,7 +74,7 @@ final class AppWatcher {
         for (name, bundleID) in knownApps {
             if current[name] == nil {
                 DispatchQueue.main.async {
-                    self.onAppRemoved?(name, bundleID)
+                    self.onAppRemoved?((name as NSString).lastPathComponent.replacingOccurrences(of: ".app", with: ""), bundleID)
                 }
             }
         }
@@ -83,7 +83,7 @@ final class AppWatcher {
         for (name, bundleID) in current {
             if knownApps[name] == nil {
                 DispatchQueue.main.async {
-                    self.onAppAdded?(name, bundleID)
+                    self.onAppAdded?((name as NSString).lastPathComponent.replacingOccurrences(of: ".app", with: ""), bundleID)
                 }
             }
         }
@@ -95,19 +95,11 @@ final class AppWatcher {
 
     private func currentApps() -> [String: String?] {
         var result: [String: String?] = [:]
-        let fm = FileManager.default
-
-        guard let items = try? fm.contentsOfDirectory(atPath: watchedPath) else {
-            return result
-        }
-
-        for item in items where item.hasSuffix(".app") {
-            let appName = (item as NSString).deletingPathExtension
-            let plistPath = "\(watchedPath)/\(item)/Contents/Info.plist"
-            let bundleID = NSDictionary(contentsOfFile: plistPath)?["CFBundleIdentifier"] as? String
-            result[appName] = bundleID
-        }
-
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let inventory = ApplicationInventory.collect(roots: [watchedPath, home + "/Applications"])
+        // An unreadable directory must never look like a mass uninstall.
+        guard inventory.unreadablePaths.isEmpty else { return knownApps }
+        for app in inventory.apps { result[app.path] = app.bundleID }
         return result
     }
 }

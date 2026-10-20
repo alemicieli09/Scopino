@@ -46,13 +46,17 @@ final class AppRemovalDetector {
 
         // Piccolo delay: lascia che il sistema finisca la rimozione
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            let app = DetectedApp(
+            Task { @MainActor in
+                let inventory = await Task.detached(priority: .utility) { ApplicationInventory.collect() }.value
+                if let bundleID, inventory.contains(bundleID) { return }
+                let app = DetectedApp(
                 name: appName,
                 bundleID: bundleID,
                 icon: self?.iconForRemovedApp(appName: appName),
                 removalDate: Date()
             )
-            self?.onAppReadyForCleanup?(app)
+                self?.onAppReadyForCleanup?(app)
+            }
         }
     }
 

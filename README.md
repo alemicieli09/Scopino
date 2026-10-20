@@ -36,6 +36,8 @@ Scopino è un'app macOS leggera che vive nella menu bar e monitora in background
 
 ## Funzionalità
 
+Per le regole aggiornate di associazione, i limiti della scansione e il recupero dei file privilegiati, vedere [Associazione dei residui](docs/Residual-scanning.md). Questa specifica sostituisce le descrizioni storiche dei motori di scansione riportate sotto.
+
 ### Rilevamento automatico
 - Monitora `/Applications` in tempo reale tramite **FSEvents**
 - Rileva la rimozione di qualsiasi app entro 1-2 secondi

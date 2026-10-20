@@ -10,8 +10,8 @@ import Foundation
 /// Protocollo XPC condiviso tra Scopino.app e ScopinoHelper.
 @objc protocol ScopinoHelperProtocol {
 
-    /// Elimina i file ai path specificati con privilegi root.
-    func removeItems(
+    /// Sposta i file nel Cestino dell’utente autenticato dalla connessione XPC.
+    func trashItems(
         atPaths paths: [String],
         withReply reply: @escaping (_ errors: [String]) -> Void
     )

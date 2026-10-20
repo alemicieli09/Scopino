@@ -107,6 +107,11 @@ struct ResidualRowView: View {
                     .font(.system(.body, design: .monospaced))
                     .lineLimit(1)
 
+                Text(item.confidence.rawValue + (item.associationReason.isEmpty ? "" : " · " + item.associationReason))
+                    .font(.caption)
+                    .foregroundStyle(item.confidence == .confirmed ? Color.secondary : Color.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 Text(item.path)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
